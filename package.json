@@ -1,0 +1,29 @@
+{
+  "name": "kafka-cascade",
+  "version": "0.0.1",
+  "description": "DLQ handling for KafkaJS",
+  "main": "",
+  "scripts": {
+    "start": "",
+    "build": "tsc", 
+    "dev": "nodemon ./dist/test.js"
+  },
+  "keywords": [
+    "Kafka",
+    "Message Reprocessing",
+    "Dead Letter Queue"
+  ],
+  "author": "Davette Byran, Michael Weber, Robert Du, Seung Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oslabs-beta/Kafka-Cascade"
+  },
+  "dependencies": {
+    "kafkajs": "^1.15.0",
+    "typescript": "^4.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
