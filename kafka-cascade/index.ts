@@ -1,3 +1,3 @@
 const { Kafka } = require('kafkajs');
+import * as types from './kafkaInterface';
 
-console.log('Got a Kafka interface');
