@@ -1,2 +1,2 @@
 # Kafka-Cascade
-DLQ Handling for Kafka Js
+DLQ Handling for KafkaJS
