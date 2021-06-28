@@ -2,11 +2,12 @@
   "name": "kafka-cascade",
   "version": "0.0.1",
   "description": "DLQ handling for KafkaJS",
-  "main": "",
+  "main": ".dist/index.js",
   "scripts": {
     "start": "",
-    "build": "tsc", 
-    "dev": "nodemon ./dist/test.js"
+    "build": "tsc",
+    "dev": "nodemon ./dist/test.js",
+    "test": "jest --verbose"
   },
   "keywords": [
     "Kafka",
@@ -24,6 +25,14 @@
     "typescript": "^4.3.4"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "@babel/core": "^7.14.6",
+    "@babel/preset-env": "^7.14.7",
+    "@babel/preset-typescript": "^7.14.5",
+    "@types/jest": "^26.0.23",
+    "babel-jest": "^27.0.6",
+    "babel-loader": "^8.2.2",
+    "jest": "^27.0.6",
+    "nodemon": "^2.0.7",
+    "ts-jest": "^27.0.3"
   }
 }
