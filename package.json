@@ -2,10 +2,10 @@
   "name": "kafka-cascade",
   "version": "0.0.1",
   "description": "DLQ handling for KafkaJS",
-  "main": "",
+  "main": ".dist/index.js",
   "scripts": {
     "start": "",
-    "build": "tsc", 
+    "build": "tsc",
     "dev": "nodemon ./dist/test.js"
   },
   "keywords": [
@@ -24,6 +24,7 @@
     "typescript": "^4.3.4"
   },
   "devDependencies": {
+    "jest": "^27.0.6",
     "nodemon": "^2.0.7"
   }
 }
