@@ -53,7 +53,46 @@ class CascadingService {
 
     this.retries = count;
   }
+
+/**
+ *
+    stop,
+    run,
+    pause,
+    paused,
+    resume,
+    on,
+ */
+  run():Promise<any> {
+    // consumer.run();
+    return new Promise(()=>null);
+  }
+
+  stop() {
+    // consumer.stop();
+  }
+
+  pause() {
+    // consumer.pause();
+  }
+
+  paused() {
+    // return consume.paused();
+  }
+
+  resume() {
+    // consume.resume();
+  }
+
+  on(event: string, callback: (args: any[]) => any) {
+
+  }
 }
+
+const returnValue = fetch('/api');
+returnValue.then(res => res.json());
+
+fetch('/api').then(res => res.json());
 
 
 module.exports = {
