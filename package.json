@@ -21,6 +21,7 @@
     "url": "https://github.com/oslabs-beta/Kafka-Cascade"
   },
   "dependencies": {
+    "@types/node": "^15.12.5",
     "kafkajs": "^1.15.0",
     "typescript": "^4.3.4"
   },
