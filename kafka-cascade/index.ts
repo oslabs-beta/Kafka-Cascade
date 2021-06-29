@@ -28,7 +28,12 @@ class CascadeService extends EventEmitter {
     'run',
     'stop',
     'pause',
-    'resume'
+    'resume',
+    'receive',
+    'success',
+    'retry',
+    'dlq',
+    'error'
   ];
 
   constructor(kafka: Types.KafkaInterface, topic: string, 
@@ -103,12 +108,6 @@ class CascadeService extends EventEmitter {
     super.on(event, callback);
   }
 }
-
-const returnValue = fetch('/api');
-returnValue.then(res => res.json());
-
-fetch('/api').then(res => res.json());
-
 
 module.exports = {
   service: (kafka: Types.KafkaInterface, topic: string, 
