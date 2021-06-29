@@ -81,7 +81,11 @@ class CascadeService extends EventEmitter {
   run():Promise<any> {
     // consumer.run();
     this.emit('run');
-    return new Promise(()=>null);
+    const promise = new Promise((resolve, reject) => {
+      setTimeout(() => resolve(true), 50);
+    });
+
+    return promise;
   }
 
   stop() {
