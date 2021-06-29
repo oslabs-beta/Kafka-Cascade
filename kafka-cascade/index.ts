@@ -1,5 +1,7 @@
-const { Kafka } = require('kafkajs');
-import * as types from './kafkaInterface';
+const EventEmitter = require('events');
+import * as Types from './kafkaInterface';
+// import CascadeProducer from './CascadeProducer';
+// import CascadeConsumer from './CascadeProducer';
 
 // kafka object to create producer and consumer
 // service callback
@@ -11,8 +13,8 @@ import * as types from './kafkaInterface';
 // retry levels -> provide default
 // retry strategies per level
 
-class CascadingService {
-  kafka: types.KafkaInterface;
+class CascadeService extends EventEmitter {
+  kafka: Types.KafkaInterface;
   topic: string;
   serviceCB: (resolve: (args: any[]) => void, reject: (args: any[]) => void) => void;
   successCB: (args: any[]) => void;
@@ -22,11 +24,19 @@ class CascadingService {
   //CascadingProducer
   //CascadingConsumer
 
-  constructor(kafka: types.KafkaInterface, topic: string, 
+  events = [ 
+    'run',
+    'stop',
+    'pause',
+    'resume'
+  ];
+
+  constructor(kafka: Types.KafkaInterface, topic: string, 
     serviceCB: (resolve: (args: any[]) => void, reject: (args: any[]) => void) => void, // checkback on reject arg types
     successCB: (args: any[]) => void,
     dlqCB: (args: any[]) => void,
     ) {
+      super();
       this.kafka = kafka;
       this.topic = topic;
       this.serviceCB = serviceCB;
@@ -65,15 +75,18 @@ class CascadingService {
  */
   run():Promise<any> {
     // consumer.run();
+    this.emit('run');
     return new Promise(()=>null);
   }
 
   stop() {
     // consumer.stop();
+    this.emit('stop');
   }
 
   pause() {
     // consumer.pause();
+    this.emit('pause');
   }
 
   paused() {
@@ -82,10 +95,12 @@ class CascadingService {
 
   resume() {
     // consume.resume();
+    this.emit('resume');
   }
 
-  on(event: string, callback: (args: any[]) => any) {
-
+  on(event: string, callback: (arg: any) => any) {
+    if(!this.events.includes(event)) throw new Error('Unkown event: ' + event);
+    super.on(event, callback);
   }
 }
 
@@ -96,11 +111,11 @@ fetch('/api').then(res => res.json());
 
 
 module.exports = {
-  service: (kafka: types.KafkaInterface, topic: string, 
+  service: (kafka: Types.KafkaInterface, topic: string, 
     serviceCB: (resolve: (args: any[]) => void, reject: (args: any[]) => void) => void, // checkback on reject arg types
     successCB: (args: any[]) => void,
-    dlqCB: (args: any[]) => void = () => console.log('DQL Message received')): CascadingService => {
+    dlqCB: (args: any[]) => void = () => console.log('DQL Message received')): CascadeService => {
 
-    return new CascadingService(kafka, topic, serviceCB, successCB, dlqCB);
+    return new CascadeService(kafka, topic, serviceCB, successCB, dlqCB);
   }
 }; 
