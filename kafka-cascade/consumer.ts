@@ -9,16 +9,16 @@ class cascadeConsumer{
   topic: string;
 
   // connect: (args: any[]) => Promise<any>;
-  constructor(consumer: types.KafkaInterface, cascadeMessage: string, topic: string, fromBeginning: boolean){
+  constructor(kafkaInterface: types.KafkaInterface, cascadeMessage: string, topic: string, fromBeginning: boolean){
     //kafka interface to this
-    this.consumer = consumer.consummer;
+    this.consumer = kafkaInterface.consumer();
     this.cascadeMessage = cascadeMessage;
     this.topic = `${topic}-cascade-retry-`;
   }
   
   connect(topic: string, fromBeginning: boolean): Promise<any> {
     return new Promise(async () => {
-      await this.consumer.connect([]);
+      await this.consumer.connect();
       this.consumer.subscribe({topic, fromBeginning});
       let re = new RegExp(`/${topic}-cascade-retry-.*`);
       this.consumer.subscribe({topic: re, fromBeginning})
@@ -39,8 +39,8 @@ class cascadeConsumer{
     let regexTopics = topics.map((regexArray,topic) => {
       regexArray.push( new RegExp(`/${topic}-cascade-retry-.*`))
     }, [])
-    this.consumer.disconnect(topics);
-    this.consumer.disconnect(regexTopics);
+    // this.consumer.disconnect(topics);
+    // this.consumer.disconnect(regexTopics);
   }
   //copy kafka js if not changed
 
