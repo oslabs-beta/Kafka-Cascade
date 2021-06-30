@@ -1,5 +1,5 @@
 const { Kafka } = require('kafkajs');
-import * as types from '../kafkaInterface';
+import * as Types from './kafkaInterface';
 
 // cascadeProducer
   // attempts retries on messages
@@ -8,12 +8,12 @@ import * as types from '../kafkaInterface';
     // send to DLQ when out of retry levels
 
 class CascadeProducer {
-  producer: types.ProducerInterface;
-  dlqCB: (args: any[]) => void;
+  producer: Types.ProducerInterface;
+  dlqCB: Types.RouteCallback;
   retryTopics: string[];
 
   // pass in kafka interface
-  constructor(kafka: types.KafkaInterface, dlqCB: (args: any[]) => void) {
+  constructor(kafka: Types.KafkaInterface, dlqCB: Types.RouteCallback) {
     this.dlqCB = dlqCB;
     this.retryTopics = [];
     this.producer = kafka.producer();
@@ -30,43 +30,42 @@ class CascadeProducer {
   /**
    * kafkaMessage = {
    *    topic: string,
+   *    partition: number,
    *    messages: [{
    *      key: string,
    *      value: string,
    *      headers: {
-   *        status: string,
-   *        retries: int,
-   *        topicArr: [],
+   *        cascadeMetadata: {
+    *        status: string,
+    *        retries: int,
+    *        topicArr: [],
+    *       }
    *      }
    *    }]
    * }
-   * 
-   * If we have headers, maybe there is no need for
-   * this additional layer of data?
-   *  
-   * cascadeMessage = {
-   *    status: string
-   *    retryCount: int
-   *    payload: JSON data
-   * }
-   * 
    */
 
-  send(msg: any): Promise<any> {
-    // destructure header properties
-    let { status, retries, topicArr } = msg.messages[0].headers;
-    // if retries equals 0, send message as normal
-    if (retries === 0) {
-      return this.producer.send(msg);
-    // how are max number of retries set?
-    } else if (retries > topicArr.length) {
-      
+  send(msg: Types.KafkaMessageInterface): Promise<any> {
+    try{
+      // destructure header properties - only first message for now, refactor later
+      const metadata = msg.messages[0].headers.cascadeMetadata;
+      // check if retries exceeds allowed number of retries
+      if (metadata.retries < this.retryTopics.length) {
+        msg.topic = this.retryTopics[metadata.retries];
+        metadata.retries += 1;
+        return this.producer.send(msg);
+      } else {
+        this.dlqCB(msg);
+        return new Promise((resolve) => resolve(true));
+      }
+    }
+    catch(error) {
+      console.log('Caught error in CascadeProducer.send: ' + error);
     }
   }
 
-  setRetryTopics(topics: string[]) {
-    let newTopic = topics[topics.length - 1] + '';
-    
+  setRetryTopics(topicsArr: string[]) {
+    this.retryTopics = topicsArr;    
   }
 }
 
