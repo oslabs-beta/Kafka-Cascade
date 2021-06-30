@@ -1,5 +1,13 @@
 const cascade = require('../kafka-cascade/index');
-import * as Types from '../kafka-cascade/kafkaInterface';
+import * as Types from '../kafka-cascade/src/kafkaInterface';
+
+const deepCopy = (obj: any):any => {
+  let returnObj = Array.isArray(obj) ? [] : {};
+  Object.keys(obj).forEach((key) => {
+    returnObj[key] = typeof obj[key] === 'object' ? deepCopy(obj[key]) : obj[key];
+  })
+  return returnObj;
+}
 
 class TestKafka {
   subscribers: any[];
@@ -8,63 +16,83 @@ class TestKafka {
 
   constructor() {
     this.subscribers = [];
+    //used for jest.fn() to test param types, number of times function was called
     this.consumer = jest.fn(() => new TestConsumer(this));
     this.producer = jest.fn(() => new TestProducer(this));
   }
 }
 
 class TestConsumer {
-  kafka: TestKafka;
   connect:any;
   disconnect: any;
   subscribe: any;
   run: any;
 
   constructor(kafka: TestKafka) {
-    this.kafka = kafka;
-    this.connect = jest.fn();
-    this.disconnect = jest.fn();
+    this.connect = jest.fn(() => {
+      return new Promise((resolve) => resolve(true));
+    });
+    this.disconnect = jest.fn(() => {
+      return new Promise((resolve) => resolve(true));
+    });
     this.subscribe = jest.fn((sub) => {
       kafka.subscribers.push({topic: sub.topic, consumer:this });
+      return new Promise((resolve) => resolve(true));
     });
     this.run = jest.fn(options => {
       kafka.subscribers.forEach(c => {
         if(c.consumer === this) c.eachMessage = options.eachMessage;
       });
+      return new Promise((resolve) => resolve(true));
     });
   }
 }
 
 class TestProducer {
-  kafka: TestKafka;
   connect: any;
   disconnect: any;
   send: any;
   partition = 0;
-  offsets: {[details: string] : {count?:number}};
+  offsets: {[details: string] : {count?:number}}; //number of times message was sent
+    //details and count used to create an hashtable
 
   constructor(kafka: TestKafka) {
-    this.kafka = kafka;
-    this.connect = jest.fn();
-    this.disconnect = jest.fn();
+    this.connect = jest.fn(() => {
+      return new Promise((resolve) => resolve(true));
+    });
+    this.disconnect = jest.fn(() => {
+      return new Promise((resolve) => resolve(true));
+    });
     this.offsets = {};
 
-    this.send = jest.fn((msg: {topic:string, messages:[{value:object}], offset?:number, partition?:number}) => {
-      if(!this.offsets[msg.topic]) this.offsets[msg.topic] = {count:0};
-      msg.offset = this.offsets[msg.topic].count++;
-      msg.partition = this.partition;
+    //defines the send function
+    this.send = jest.fn((msg: Types.KafkaMessageInterface) => {
+      try {
+        //check if sent for the given topic
+        if(!this.offsets[msg.topic]) this.offsets[msg.topic] = {count:0};
+        msg.offset = this.offsets[msg.topic].count++;
+        msg.partition = this.partition;
 
-      kafka.subscribers.forEach(c => {
-        if(typeof(c.topic) === 'string' && c.topic === msg.topic) {
-          c.eachMessage(msg);
+        for(let i = 0; i < kafka.subscribers.length; i++) {
+          const c = kafka.subscribers[i];
+          const msgCopy = deepCopy(msg);
+          if(typeof(c.topic) === 'string' && c.topic === msgCopy.topic) {
+            c.eachMessage(msgCopy);
+          }
+          else if(typeof(c.topic) !== 'string' && msgCopy.topic.search(c.topic) > -1) {
+            c.eachMessage(msgCopy);
+          }
         }
-        else if(msg.topic.search(c.topic) > -1) {
-          c.eachMessage(msg);
-        }
-      });
+
+        return new Promise((resolve) => resolve(true));
+      }
+      catch(error) {
+        console.log('Caught error in TestProducer.send: ' + error);
+      }
     });
   }
 }
+let checkingOutput = 1;
 
 test('Can create a test kafka object', () => {
   const kafka = new TestKafka();
@@ -98,59 +126,72 @@ describe('Basic service tests', () => {
   });
 
   it('Can create an empty service object', async () => {
-    testService = await cascade.service(kafka, 'test-topic', jest.fn(), jest.fn(), jest.fn());
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', jest.fn(), jest.fn(), jest.fn());
     expect(testService.retries).toBe(0);
   });
 
   it('All messages end up in DLQ when service is always fail', async () => {
     const serviceAction = (msg: any, resolve: any, reject: any) => {
-      msg.header.status = 'failed';
-      reject(msg);
+      try {
+        reject(msg);
+      }
+      catch(error) {
+        console.log('Caught error in service CB: ' + error);
+      }
     }
-
+    //used to ask how dlq was used
     const dlq = jest.fn();
 
-    testService = await cascade.service(kafka, 'test-topic', serviceAction, jest.fn(), dlq);
-    testService.setRetryLevels(5);
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
+    const retryLevels = 5;
+    testService.setRetryLevels(retryLevels);
     await testService.run();
 
     const producer = kafka.producer();
-    for(let i = 0; i < 100; i++) {
-      producer.send({
+    const messageCount = 10;
+    //mimics sending message for the producer
+    for(let i = 0; i < messageCount; i++) {
+      await producer.send({
         topic: 'test-topic',
         messages: [{
           value: 'test message',
         }],
       });
     }
-
-    expect(producer.offsets['test-topic'].count).toBe(100);
-    const testServerOffsets = testService.producer.producer.offsets;
-    expect(Object.keys(testServerOffsets)).toHaveLength(5);
-    for(let topic in testServerOffsets) {
-      expect(testServerOffsets[topic].count).toBe(100);
+    //checks the number of times the message was sent
+    expect(producer.offsets['test-topic'].count).toBe(messageCount);
+    const testServiceOffsets = testService.producer.producer.offsets;
+    // since every request should have failed, offsets should equal retryLevels
+    expect(Object.keys(testServiceOffsets)).toHaveLength(retryLevels);
+    // each level should have sent a number of messages equal to messageCount
+    for(let topic in testServiceOffsets) {
+      expect(testServiceOffsets[topic].count).toBe(messageCount);
     }
-    expect(dlq).toHaveBeenCalledTimes(100);
+    expect(dlq).toHaveBeenCalledTimes(messageCount);//dlq should be the same as the messagecount
   });
 
-  it('All messages succeed when retryCount is 1', async () => {
+  it('All messages succeed when retries is 1', async () => {
     const serviceAction = (msg: any, resolve: any, reject: any) => {
-      if(msg.header.retryCount === 1) {
-        msg.header.status = 'success';
+      //set it to succeed after 1 retry
+      if(msg.messages[0].headers.cascadeMetadata.retries === 1) {
+        msg.messages[0].headers.cascadeMetadata.status = 'success';
         resolve(msg);
       }
       else reject(msg);
     }
 
     const success = jest.fn();
+    const dlq = jest.fn();
 
-    testService = await cascade.service(kafka, 'test-topic', serviceAction, success);
-    testService.setRetryLevels(5);
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, success, dlq);
+    const retryLevels = 5;
+    testService.setRetryLevels(retryLevels);
     await testService.run();
 
     const producer = kafka.producer();
-    for(let i = 0; i < 100; i++) {
-      producer.send({
+    const messageCount = 10;
+    for(let i = 0; i < messageCount; i++) {
+      await producer.send({
         topic: 'test-topic',
         messages: [{
           value: 'test message',
@@ -158,13 +199,11 @@ describe('Basic service tests', () => {
       });
     }
 
-    expect(producer.offsets['test-topic'].count).toBe(100);
+    expect(producer.offsets['test-topic'].count).toBe(messageCount);
     const testServerOffsets = testService.producer.producer.offsets;
-    expect(Object.keys(testServerOffsets)).toHaveLength(5);
-    for(let topic in testServerOffsets) {
-      if(topic === 'test-topic-cascade-retry-1') expect(testServerOffsets[topic].count).toBe(100);
-      else expect(testServerOffsets[topic].count).toBe(0);
-    }
-    expect(success).toHaveBeenCalledTimes(100);
+    expect(Object.keys(testServerOffsets)).toHaveLength(1);
+    expect(testServerOffsets['test-topic-cascade-retry-1'].count).toBe(messageCount);
+    expect(success).toHaveBeenCalledTimes(messageCount);
+    expect(dlq).toHaveBeenCalledTimes(0);
   });
 });
