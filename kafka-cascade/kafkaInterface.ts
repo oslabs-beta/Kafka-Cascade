@@ -12,7 +12,7 @@ interface ProducerInterface {
 interface ConsumerInterface {
   connect: () => Promise<any>;
   disconnect: () => any;
-  subscribe: (arg: {topic:string, fromBeginning: boolean}) => Promise<any>;
+  subscribe: (arg: {topic:string|RegExp, fromBeginning: boolean}) => Promise<any>;
   run: (arg: ({eachMessage: {topic:string, partition: number, message: any}})) => any;
 }
 
