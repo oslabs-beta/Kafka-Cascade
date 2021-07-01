@@ -57,6 +57,7 @@ class CascadeService extends EventEmitter {
   }
 
   setRetryLevels(count: number) {
+    console.log('INSIDE OF CascadeService::setRetryLevels');
     if(this.topicsArr.length > count){
       const diff = this.topicsArr.length - count;
       for(let i = 0; i < diff; i++){

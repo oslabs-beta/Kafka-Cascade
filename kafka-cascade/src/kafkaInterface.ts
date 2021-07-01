@@ -1,57 +1,66 @@
 import { inherits } from "util";
 
-interface MessageInterface {
-  topic: string;
-  messages: [{ value:string }];
-}
-
 interface ProducerInterface {
   connect: () => Promise<any>;
   disconnect: () => any;
-  send:(arg: MessageInterface, callby?: string) => any;
+  send:(arg: KafkaProducerMessageInterface) => any;
 }
 
 interface ConsumerInterface {
-  connect: ({groupId:string}) => Promise<any>;
+  connect: () => Promise<any>;
   disconnect: () => any;
   subscribe: (arg: {topic:string|RegExp, fromBeginning: boolean}) => Promise<any>;
   run: (arg: ({
-    eachMessage: (msg: KafkaMessageInterface) => void,
+    eachMessage: (msg: KafkaConsumerMessageInterface) => void,
   })) => any;
 }
 
 interface KafkaInterface {
   producer: () => ProducerInterface;
-  consumer: () => ConsumerInterface;
+  consumer: ({groupId:string}) => ConsumerInterface;
 }
 
-interface KafkaMessageInterface {
+interface KafkaProducerMessageInterface {
   topic: string,
-  partition: number,
-  offset: number,
-  messages: [{
+  messages: {
     key?: string,
     value: string,
     headers?: {
-      cascadeMetadata?: {
-        status: string,
-        retries: number,
-        topicArr: string[],
-      }
+      cascadeMetadata?: string,
     }
-  }]
+  }[]
 }
 
-type ServiceCallback = (msg: KafkaMessageInterface, resolve: RouteCallback, reject: RouteCallback) => void;
+interface KafkaConsumerMessageInterface {
+  topic: string,
+  partition: number,
+  offset: number,
+  message: {
+    key?: string,
+    value: string,
+    headers?: {
+      cascadeMetadata?: string,
+    }
+  }
+}
 
-type RouteCallback = (msg: KafkaMessageInterface) => void;
+interface CascadeMetadata {
+  status: string,
+  retries: number,
+  topicArr: string[],
+}
+
+type ServiceCallback = (msg: KafkaConsumerMessageInterface, resolve: RouteCallback, reject: RouteCallback) => void;
+
+type RouteCallback = (msg: KafkaConsumerMessageInterface) => void;
 
 export { 
-  MessageInterface, 
   ProducerInterface, 
   ConsumerInterface, 
   KafkaInterface, 
-  KafkaMessageInterface, 
+  KafkaProducerMessageInterface, 
+  KafkaConsumerMessageInterface, 
+  CascadeMetadata,
   ServiceCallback, 
   RouteCallback,
 };
