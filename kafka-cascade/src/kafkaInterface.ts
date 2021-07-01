@@ -12,7 +12,7 @@ interface ProducerInterface {
 }
 
 interface ConsumerInterface {
-  connect: ({groupId:string}) => Promise<any>;
+  connect: () => Promise<any>;
   disconnect: () => any;
   subscribe: (arg: {topic:string|RegExp, fromBeginning: boolean}) => Promise<any>;
   run: (arg: ({
@@ -22,7 +22,7 @@ interface ConsumerInterface {
 
 interface KafkaInterface {
   producer: () => ProducerInterface;
-  consumer: () => ConsumerInterface;
+  consumer: ({groupId:string}) => ConsumerInterface;
 }
 
 interface KafkaMessageInterface {
@@ -31,7 +31,7 @@ interface KafkaMessageInterface {
   offset: number,
   messages: [{
     key?: string,
-    value: string,
+    value: any,
     headers?: {
       cascadeMetadata?: {
         status: string,

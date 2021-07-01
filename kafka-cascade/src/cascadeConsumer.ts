@@ -13,7 +13,7 @@ class CascadeConsumer {
   //constructor
   constructor(kafkaInterface: Types.KafkaInterface, topic: string, groupId: string, fromBeginning: boolean){
     //kafka interface to this
-    this.consumer = kafkaInterface.consumer();
+    this.consumer = kafkaInterface.consumer({groupId});
     this.topic = topic;
     this.groupId = groupId;
     this.fromBeginning = fromBeginning;
@@ -34,12 +34,19 @@ class CascadeConsumer {
 
     //without arguments passed in, it will use the variables that are saved from constructor
     return new Promise(async (resolve, reject) => {
-      await this.consumer.connect({groupId: this.groupId});
-      await this.consumer.subscribe({topic: this.topic, fromBeginning: this.fromBeginning});
-      let re = new RegExp(`^${this.topic}-cascade-retry-.*`);
-      await this.consumer.subscribe({topic: re, fromBeginning: this.fromBeginning});
-      // console.log('Consumer count: ', this.consumer.kafka.subscribers.length);
-      resolve(true);
+      try {
+        await this.consumer.connect();
+        console.log('Connected to the consumer...');
+        await this.consumer.subscribe({topic: this.topic, fromBeginning: this.fromBeginning});
+        console.log('Subscribed to the base topic:', this.topic);
+        let re = new RegExp(`^${this.topic}-cascade-retry-.*`);
+        await this.consumer.subscribe({topic: re, fromBeginning: this.fromBeginning});
+        console.log('Connected to the retry topics...');
+        resolve(true);
+      }
+      catch(error) {
+        reject(error);
+      }
     });
   }
 

@@ -1,13 +1,30 @@
 import CascadeService from './src/cascadeService';
+import CascadeProducer from './src/cascadeProducer';
+import CascadeConsumer from './src/cascadeConsumer'
 import * as Types from './src/kafkaInterface';
 
 module.exports = {
-  service: async (kafka: Types.KafkaInterface, topic: string, groupId: string,
+  service: (kafka: Types.KafkaInterface, topic: string, groupId: string,
     serviceCB: Types.ServiceCallback, successCB: Types.RouteCallback,
     dlqCB: Types.RouteCallback = (msg: Types.KafkaMessageInterface) => console.log('DQL Message received')): Promise<CascadeService> => {
     
-    const newServ = new CascadeService(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-    await newServ.connect();
-    return newServ;
-  }
+    return new Promise(async (resolve, reject) => {
+      try {
+        const newServ = new CascadeService(kafka, topic, groupId, serviceCB, successCB, dlqCB);
+        await newServ.connect();
+        resolve(newServ);
+      }
+      catch(error) {
+        reject(error);
+      }
+    });
+  },
 };
+
+export {
+  CascadeService,
+  CascadeProducer,
+  CascadeConsumer,
+  Types,
+};
+
