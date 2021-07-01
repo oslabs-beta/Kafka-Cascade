@@ -14,15 +14,18 @@ const producer = kafka.producer();
 let topic = 'test-topic';
 const groupId = 'test-group';
 const serviceCB:Cascade.Types.ServiceCallback = (msg, resolve, reject) => {
-  const message = msg.messages[0];
-  if(message.headers.cascadeMetadata.retries === message.value.retries) resolve(msg);
+  const message = JSON.parse(msg.message.value);
+  const header = JSON.parse(msg.message.headers.cascadeMetadata);
+
+  if(header.retries === message.retries) resolve(msg);
   else reject(msg);
 };
 const successCB:Cascade.Types.RouteCallback = (msg) => {
-  console.log('Received message in success callback: ' + msg.messages[0].headers.cascadeMetadata.retries);
+  const retries = JSON.parse(msg.message.headers.cascadeMetadata).retries
+  console.log('Received message in success callback: ' + retries);
 };
 const dlqCB:Cascade.Types.RouteCallback = (msg) => {
-  console.log('Received message in DQL');
+  console.log('Received message in DLQ');
 };
 
 var service: Cascade.CascadeService;
@@ -35,7 +38,7 @@ cascadeController.startService = async (req: {query: {retries:string}}, res, nex
     await producer.connect();
     service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
     console.log('Connected to Kafka server...');
-    service.setRetryLevels(5);
+    service.setRetryLevels(6);
     await service.run();
     console.log('Listening to Kafka server...');
 
@@ -52,33 +55,47 @@ cascadeController.startService = async (req: {query: {retries:string}}, res, nex
 };
 
 cascadeController.sendMessage = async (req, res, next) => {
-  //req.query => retries and message
-  // this middleware function needs to do all of the vanilla kafka stuff to send a message
-  topic = req.query.topic || topic;
-  const message = req.query.message || 'https://www.youtube.com/watch?v=fNLhxKpfCnA';
-  let retries = req.query.retries;
+  try {
+    topic = req.query.topic || topic;
+    const message = req.query.message || 'https://www.youtube.com/watch?v=fNLhxKpfCnA';
+    let retries = req.query.retries;
 
-  res.locals = { message, retries };
+    res.locals = { message, retries: Number(retries), time: (new Date()).valueOf() };
 
-  // check to see if server is running
+    // check to see if server is running
 
-  // send message
-  await producer.send({
-    topic,
-    messages: [
-      {
-        value: res.locals,
-      }
-    ]
-  })
-  
-  return next();
+    // send message
+    await producer.send({
+      topic,
+      messages: [
+        {
+          value: JSON.stringify(res.locals),
+        }
+      ]
+    })
+    
+    return next();
+  }
+  catch(error) {
+    return next({
+      log: 'Error in cascadeController.sendMessage: ' + error,
+      message: 'Error in cascadeController.sendMessage, check the log',
+    });
+  }
 };
 
 cascadeController.stopService = async (req, res, next) => {
-  await producer.disconnect();
-  // nothing else to do yet
-  return next();
+  try {
+    await producer.disconnect();
+    // nothing else to do yet
+    return next();
+  }
+  catch(error) {
+    return next({
+      log: 'Error in cascadeController.stopService: ' + error,
+      message: 'Error in cascadeController.stopService, check the log',
+    });
+  }
 };
 
 

@@ -51,21 +51,21 @@ class CascadeConsumer {
   }
 
   run(serviceCB: Types.ServiceCallback, successCB: Types.RouteCallback, rejectCB: Types.RouteCallback):Promise<any> {
-    return this.consumer.run({eachMessage: (msg: Types.KafkaMessageInterface)=> {
+    return this.consumer.run({eachMessage: (msg: Types.KafkaConsumerMessageInterface)=> {
       // process a message
       // check if message has expected header structure
       // only checking first message now, may have to refactor later
       try {
-        if (!msg.messages[0].headers) {
-          msg.messages[0].headers = {};
+        if (!msg.message.headers) {
+          msg.message.headers = {};
         }
 
-        if (!msg.messages[0].headers.cascadeMetadata) {
-          msg.messages[0].headers.cascadeMetadata = {
+        if (!msg.message.headers.cascadeMetadata) {
+          msg.message.headers.cascadeMetadata = JSON.stringify({
             status: '',
             retries: 0,
             topicArr: [],
-          }
+          })
         }
         // call the service
         serviceCB(msg, successCB, rejectCB);

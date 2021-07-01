@@ -1,14 +1,9 @@
 import { inherits } from "util";
 
-interface MessageInterface {
-  topic: string;
-  messages: [{ value:string }];
-}
-
 interface ProducerInterface {
   connect: () => Promise<any>;
   disconnect: () => any;
-  send:(arg: MessageInterface, callby?: string) => any;
+  send:(arg: KafkaProducerMessageInterface) => any;
 }
 
 interface ConsumerInterface {
@@ -16,7 +11,7 @@ interface ConsumerInterface {
   disconnect: () => any;
   subscribe: (arg: {topic:string|RegExp, fromBeginning: boolean}) => Promise<any>;
   run: (arg: ({
-    eachMessage: (msg: KafkaMessageInterface) => void,
+    eachMessage: (msg: KafkaConsumerMessageInterface) => void,
   })) => any;
 }
 
@@ -25,33 +20,47 @@ interface KafkaInterface {
   consumer: ({groupId:string}) => ConsumerInterface;
 }
 
-interface KafkaMessageInterface {
+interface KafkaProducerMessageInterface {
+  topic: string,
+  messages: {
+    key?: string,
+    value: string,
+    headers?: {
+      cascadeMetadata?: string,
+    }
+  }[]
+}
+
+interface KafkaConsumerMessageInterface {
   topic: string,
   partition: number,
   offset: number,
-  messages: [{
+  message: {
     key?: string,
-    value: any,
+    value: string,
     headers?: {
-      cascadeMetadata?: {
-        status: string,
-        retries: number,
-        topicArr: string[],
-      }
+      cascadeMetadata?: string,
     }
-  }]
+  }
 }
 
-type ServiceCallback = (msg: KafkaMessageInterface, resolve: RouteCallback, reject: RouteCallback) => void;
+interface CascadeMetadata {
+  status: string,
+  retries: number,
+  topicArr: string[],
+}
 
-type RouteCallback = (msg: KafkaMessageInterface) => void;
+type ServiceCallback = (msg: KafkaConsumerMessageInterface, resolve: RouteCallback, reject: RouteCallback) => void;
+
+type RouteCallback = (msg: KafkaConsumerMessageInterface) => void;
 
 export { 
-  MessageInterface, 
   ProducerInterface, 
   ConsumerInterface, 
   KafkaInterface, 
-  KafkaMessageInterface, 
+  KafkaProducerMessageInterface, 
+  KafkaConsumerMessageInterface, 
+  CascadeMetadata,
   ServiceCallback, 
   RouteCallback,
 };

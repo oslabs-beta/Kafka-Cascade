@@ -45,15 +45,25 @@ class CascadeProducer {
    * }
    */
 
-  send(msg: Types.KafkaMessageInterface): Promise<any> {
+  send(msg: Types.KafkaConsumerMessageInterface): Promise<any> {
     try{
-      // destructure header properties - only first message for now, refactor later
-      const metadata = msg.messages[0].headers.cascadeMetadata;
+      // access cascadeMetadata - only first message for now, refactor later
+      const metadata = JSON.parse(msg.message.headers.cascadeMetadata);
       // check if retries exceeds allowed number of retries
       if (metadata.retries < this.retryTopics.length) {
         msg.topic = this.retryTopics[metadata.retries];
         metadata.retries += 1;
-        return this.producer.send(msg);
+        // populate producerMessage object
+        const producerMessage = {
+          topic: msg.topic, 
+          messages: [{
+            key: msg.message.key, 
+            value: msg.message.value, 
+            headers: { cascadeMetadata: JSON.stringify(metadata) }
+          }]
+        };
+        
+        return this.producer.send(producerMessage);
       } else {
         this.dlqCB(msg);
         return new Promise((resolve) => resolve(true));
