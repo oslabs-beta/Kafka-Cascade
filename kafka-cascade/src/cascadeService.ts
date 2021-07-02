@@ -104,7 +104,7 @@ class CascadeService extends EventEmitter {
         }, 10);
       }
       catch(error) {
-        console.log('Logged an error in the setRetryLevels:', error);
+        // console.log('Logged an error in the setRetryLevels:', error);
         reject(error);
       }
     });

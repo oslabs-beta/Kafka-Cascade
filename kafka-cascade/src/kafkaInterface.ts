@@ -18,7 +18,7 @@ interface ConsumerInterface {
 interface AdminInterface {
   connect: () => Promise<any>;
   disconnect: () => Promise<any>;
-  listTopics: () => string[];
+  listTopics: () => Promise<string[]>;
   createTopics: (arg: {validateOnly?:boolean, waitForLeaders?:boolean, timeout?:number, topics:{topic:string, numPartitions?:number}[]}) => Promise<any>; 
 }
 

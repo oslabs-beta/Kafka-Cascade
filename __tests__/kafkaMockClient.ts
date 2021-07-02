@@ -84,6 +84,7 @@ class TestProducer {
       }
       catch(error) {
         console.log('Caught error in TestProducer.send: ' + error);
+        return new Promise((resolve, reject) => reject(error));
       }
     });
   }
@@ -97,7 +98,7 @@ class TestAdmin {
     return new Promise((resolve) => resolve(true));
   });;
   listTopics:any = jest.fn(() => {
-    return new Promise((resolve) => resolve(true));
+    return new Promise((resolve) => resolve(['test-topic']));
   });
   createTopics:any = jest.fn(() => {
     return new Promise((resolve) => resolve(true));

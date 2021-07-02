@@ -2,6 +2,8 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './kafkaMockClient';
 
+console.log = jest.fn();
+
 describe('Basic service tests', () => {
   let kafka: TestKafka;
   let testService: any;
@@ -29,7 +31,8 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     const retryLevels = 5;
-    testService.setRetryLevels(retryLevels);
+    await testService.setRetryLevels(retryLevels);
+    await testService.connect();
     await testService.run();
 
     const producer = kafka.producer();
@@ -71,7 +74,8 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, success, dlq);
     const retryLevels = 5;
-    testService.setRetryLevels(retryLevels);
+    await testService.setRetryLevels(retryLevels);
+    await testService.connect();
     await testService.run();
 
     const producer = kafka.producer();
