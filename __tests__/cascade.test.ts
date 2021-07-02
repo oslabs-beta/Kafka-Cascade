@@ -1,6 +1,6 @@
 const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
-import { TestKafka } from './kafkaMockClient';
+import { TestKafka } from './kafkaMockClient.test';
 
 console.log = jest.fn();
 
