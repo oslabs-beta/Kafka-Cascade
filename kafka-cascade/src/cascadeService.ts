@@ -57,7 +57,6 @@ class CascadeService extends EventEmitter {
   }
 
   setRetryLevels(count: number) {
-    console.log('INSIDE OF CascadeService::setRetryLevels');
     if(this.topicsArr.length > count){
       const diff = this.topicsArr.length - count;
       for(let i = 0; i < diff; i++){
@@ -83,6 +82,7 @@ class CascadeService extends EventEmitter {
           }
           catch(error) {
             console.log('Caught error in reject callback: ' + error);
+            throw error;
           }
         });
         this.emit('run');

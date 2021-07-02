@@ -22,6 +22,8 @@ interface KafkaInterface {
 
 interface KafkaProducerMessageInterface {
   topic: string,
+  offset?: number,
+  partition?:number,
   messages: {
     key?: string,
     value: string,
