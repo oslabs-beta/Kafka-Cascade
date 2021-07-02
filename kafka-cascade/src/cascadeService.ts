@@ -52,25 +52,62 @@ class CascadeService extends EventEmitter {
       this.consumer = new CascadeConsumer(kafka, topic, groupId, false); // revisit fromBeginning at a later point
   }
 
-  connect():Promise<any> {
-    return Promise.all([this.producer.connect(), this.consumer.connect()]);    
+  connect():Promise<any> {   
+    return new Promise(async (resolve, reject) => {
+      try
+      {
+        await this.producer.connect();
+        await this.consumer.connect();
+        resolve(true);
+      }
+      catch(error) {
+        reject(error);
+      }
+    });  
   }
 
-  setRetryLevels(count: number) {
-    if(this.topicsArr.length > count){
-      const diff = this.topicsArr.length - count;
-      for(let i = 0; i < diff; i++){
-        this.topicsArr.pop();
-      };
-    }
-    else {
-      for(let i = this.retries; i < count; i++){
-        this.topicsArr.push(this.topic + '-cascade-retry-' + (i+1));
-      }
-    }
+  setRetryLevels(count: number): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if(this.topicsArr.length > count){
+          const diff = this.topicsArr.length - count;
+          for(let i = 0; i < diff; i++){
+            this.topicsArr.pop();
+          };
+        }
+        else {
+          for(let i = this.retries; i < count; i++){
+            this.topicsArr.push(this.topic + '-cascade-retry-' + (i+1));
+          }
+        }
 
-    this.producer.setRetryTopics(this.topicsArr);
-    this.retries = count;
+        this.producer.setRetryTopics(this.topicsArr);
+        this.retries = count;
+
+        // get an admin client to pre-register topics
+        const admin = this.kafka.admin();
+        await admin.connect();
+        const registerTopics = {
+          waitForLeaders: true,
+          topics: [],
+        }
+        this.topicsArr.forEach(topic => registerTopics.topics.push({topic}));
+
+        await admin.createTopics(registerTopics);
+        const re = new RegExp(`^${this.topic}-cascade-retry-.*`);
+        console.log('topics registered =', (await admin.listTopics()).filter(topic => topic === this.topic || topic.search(re) > -1));
+        await admin.disconnect();
+
+        setTimeout(() => {
+          console.log('Registered topics with Kafka...');
+          resolve(true);
+        }, 10);
+      }
+      catch(error) {
+        console.log('Logged an error in the setRetryLevels:', error);
+        reject(error);
+      }
+    });
   }
 
   run():Promise<any> {

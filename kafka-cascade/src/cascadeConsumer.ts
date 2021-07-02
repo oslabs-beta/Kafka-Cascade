@@ -11,7 +11,7 @@ class CascadeConsumer {
 
   
   //constructor
-  constructor(kafkaInterface: Types.KafkaInterface, topic: string, groupId: string, fromBeginning: boolean){
+  constructor(kafkaInterface: Types.KafkaInterface, topic: string, groupId: string, fromBeginning: boolean = false){
     //kafka interface to this
     this.consumer = kafkaInterface.consumer({groupId});
     this.topic = topic;
@@ -21,7 +21,7 @@ class CascadeConsumer {
 
   // Connect and subscribe to both reg and regex for the topic
   // connect: (args: any[]) => Promise<any>;
-  connect(topic?: string, fromBeginning?: boolean): Promise<any> {
+  connect(): Promise<any> {
     /*
     return new Promise(async (resolve, reject) => {
       await this.consumer.connect()
@@ -77,12 +77,12 @@ class CascadeConsumer {
   }
 
   //disconnect to every to  
-  disconnect(topics: any[]): any{
+  disconnect(): Promise<any> {
     // return this.consumer.disconnect();
-    let regexTopics = topics.map((regexArray,topic) => {
-      regexArray.push( new RegExp(`^${topic}-cascade-retry-.*`))
-    }, [])
-    this.consumer.disconnect();
+    // let regexTopics = topics.map((regexArray,topic) => {
+    //   regexArray.push( new RegExp(`^${topic}-cascade-retry-.*`))
+    // }, [])
+    return this.consumer.disconnect();
     // this.consumer.disconnect(topics);
     // this.consumer.disconnect(regexTopics);
   }

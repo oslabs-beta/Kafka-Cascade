@@ -59,11 +59,18 @@ class CascadeProducer {
           messages: [{
             key: msg.message.key, 
             value: msg.message.value, 
-            headers: { cascadeMetadata: JSON.stringify(metadata) }
+            headers: { ...msg.message.headers, cascadeMetadata: JSON.stringify(metadata) }
           }]
         };
         
-        return this.producer.send(producerMessage);
+        return new Promise((resolve, reject) => {
+          this.producer.send(producerMessage)
+            .then(res => resolve(res))
+            .catch(res => {
+              console.log('Caught an error trying to send: ' + res);
+              reject(res);
+            });
+        });
       } else {
         this.dlqCB(msg);
         return new Promise((resolve) => resolve(true));

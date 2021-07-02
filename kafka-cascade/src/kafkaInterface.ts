@@ -15,9 +15,17 @@ interface ConsumerInterface {
   })) => any;
 }
 
+interface AdminInterface {
+  connect: () => Promise<any>;
+  disconnect: () => Promise<any>;
+  listTopics: () => string[];
+  createTopics: (arg: {validateOnly?:boolean, waitForLeaders?:boolean, timeout?:number, topics:{topic:string, numPartitions?:number}[]}) => Promise<any>; 
+}
+
 interface KafkaInterface {
   producer: () => ProducerInterface;
   consumer: ({groupId:string}) => ConsumerInterface;
+  admin: () => AdminInterface;
 }
 
 interface KafkaProducerMessageInterface {
@@ -59,6 +67,7 @@ type RouteCallback = (msg: KafkaConsumerMessageInterface) => void;
 export { 
   ProducerInterface, 
   ConsumerInterface, 
+  AdminInterface,
   KafkaInterface, 
   KafkaProducerMessageInterface, 
   KafkaConsumerMessageInterface, 
