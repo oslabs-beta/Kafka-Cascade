@@ -1,5 +1,3 @@
-import { inherits } from "util";
-
 interface ProducerInterface {
   connect: () => Promise<any>;
   disconnect: () => any;
@@ -32,6 +30,7 @@ interface KafkaInterface {
 }
 //timeout: number,    //used for added delay per retry
 interface KafkaProducerMessageInterface {
+  topic: string,
   offset?: number,
   partition?:number,
   messages: {

@@ -1,7 +1,7 @@
-const { Kafka } = require('kafkajs');
+const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 
-class CascadeProducer {
+class CascadeProducer extends EventEmitter {
   producer: Types.ProducerInterface;
   dlqCB: Types.RouteCallback;
   retryTopics: string[];
@@ -10,10 +10,12 @@ class CascadeProducer {
 
   // pass in kafka interface
   constructor(kafka: Types.KafkaInterface, dlqCB: Types.RouteCallback) {
+    super();
     this.dlqCB = dlqCB;
     this.retryTopics = [];
     this.producer = kafka.producer();
     this.paused = false;
+    this.pausedQueue = [];
   }
 
   connect(): Promise<any> {
@@ -67,6 +69,8 @@ class CascadeProducer {
             headers: { ...msg.message.headers, cascadeMetadata: JSON.stringify(metadata) }
           }]
         };
+
+        this.emit('retry', msg);
         
         return new Promise((resolve, reject) => {
           this.producer.send(producerMessage)
@@ -77,6 +81,7 @@ class CascadeProducer {
             });
         });
       } else {
+        this.emit('dlq', msg);
         this.dlqCB(msg);
         return new Promise((resolve) => resolve(true));
       }

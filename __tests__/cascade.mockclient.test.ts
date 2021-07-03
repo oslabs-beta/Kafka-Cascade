@@ -20,6 +20,9 @@ class TestConsumer {
   disconnect: any;
   subscribe: any;
   run: any;
+  pause: any;
+  resume: any;
+  paused:boolean = false;
 
   constructor(kafka: TestKafka) {
     this.connect = jest.fn(() => {
@@ -36,6 +39,14 @@ class TestConsumer {
       kafka.subscribers.forEach(c => {
         if(c.consumer === this) c.eachMessage = options.eachMessage;
       });
+      return new Promise((resolve) => resolve(true));
+    });
+    this.pause = jest.fn(() => {
+      this.paused = true;
+      return new Promise((resolve) => resolve(true));
+    });
+    this.resume = jest.fn(() => {
+      this.paused = false;
       return new Promise((resolve) => resolve(true));
     });
   }
