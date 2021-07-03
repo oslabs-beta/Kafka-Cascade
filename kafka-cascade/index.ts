@@ -11,7 +11,6 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       try {
         const newServ = new CascadeService(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-        await newServ.connect();
         resolve(newServ);
       }
       catch(error) {

@@ -1,8 +1,6 @@
 const { Kafka } = require('kafkajs');
 const cascade = require('../../../kafka-cascade/index.ts');
 import * as Cascade from '../../../kafka-cascade/index';
-import {Types as cascadeType} from '../../../kafka-cascade/index';
-import CascadeService from '../../../kafka-cascade/src/cascadeService';
 
 const kafka = new Kafka({
   clientId: 'kafka-demo',
@@ -11,12 +9,13 @@ const kafka = new Kafka({
 
 const producer = kafka.producer();  
 
-let topic = 'test-topic';
+let topic = 'demo-topic';
 const groupId = 'test-group';
 const serviceCB:Cascade.Types.ServiceCallback = (msg, resolve, reject) => {
   const message = JSON.parse(msg.message.value);
   const header = JSON.parse(msg.message.headers.cascadeMetadata);
-
+  console.log(`Received message ${msg.topic} in service callback: resolve at ${message.retries}, currently at ${header.retries}`);
+  
   if(header.retries === message.retries) resolve(msg);
   else reject(msg);
 };
@@ -35,15 +34,17 @@ const cascadeController:any = {};
 cascadeController.startService = async (req: {query: {retries:string}}, res, next) => {
   try {
     const { retries } = req.query;
-    await producer.connect();
     service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
+    await service.setRetryLevels(6);
+    
+    await service.connect();
+    await producer.connect();
     console.log('Connected to Kafka server...');
-    service.setRetryLevels(6);
     await service.run();
     console.log('Listening to Kafka server...');
 
     // what do we send back?
-    res.locals.confirmation = 'Cascade service connected to Kafka server...';
+    res.locals.confirmation = 'Cascade service is connecting to Kafka server...';
     return next();
   }
   catch(error) {

@@ -1,121 +1,8 @@
 const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
+import { TestKafka } from './kafkaMockClient.test';
 
-const deepCopy = (obj: any):any => {
-  let returnObj = Array.isArray(obj) ? [] : {};
-  Object.keys(obj).forEach((key) => {
-    returnObj[key] = typeof obj[key] === 'object' ? deepCopy(obj[key]) : obj[key];
-  })
-  return returnObj;
-}
-
-class TestKafka {
-  subscribers: any[];
-  consumer: any;
-  producer: any;
-
-  constructor() {
-    this.subscribers = [];
-    //used for jest.fn() to test param types, number of times function was called
-    this.consumer = jest.fn(() => new TestConsumer(this));
-    this.producer = jest.fn(() => new TestProducer(this));
-  }
-}
-
-class TestConsumer {
-  connect:any;
-  disconnect: any;
-  subscribe: any;
-  run: any;
-
-  constructor(kafka: TestKafka) {
-    this.connect = jest.fn(() => {
-      return new Promise((resolve) => resolve(true));
-    });
-    this.disconnect = jest.fn(() => {
-      return new Promise((resolve) => resolve(true));
-    });
-    this.subscribe = jest.fn((sub) => {
-      kafka.subscribers.push({topic: sub.topic, consumer:this });
-      return new Promise((resolve) => resolve(true));
-    });
-    this.run = jest.fn(options => {
-      kafka.subscribers.forEach(c => {
-        if(c.consumer === this) c.eachMessage = options.eachMessage;
-      });
-      return new Promise((resolve) => resolve(true));
-    });
-  }
-}
-
-class TestProducer {
-  connect: any;
-  disconnect: any;
-  send: any;
-  partition = 0;
-  offsets: {[details: string] : {count?:number}}; //number of times message was sent
-    //details and count used to create an hashtable
-
-  constructor(kafka: TestKafka) {
-    this.connect = jest.fn(() => {
-      return new Promise((resolve) => resolve(true));
-    });
-    this.disconnect = jest.fn(() => {
-      return new Promise((resolve) => resolve(true));
-    });
-    this.offsets = {};
-
-    //defines the send function
-    this.send = jest.fn((msg: Types.KafkaMessageInterface) => {
-      try {
-        //check if sent for the given topic
-        if(!this.offsets[msg.topic]) this.offsets[msg.topic] = {count:0};
-        msg.offset = this.offsets[msg.topic].count++;
-        msg.partition = this.partition;
-
-        for(let i = 0; i < kafka.subscribers.length; i++) {
-          const c = kafka.subscribers[i];
-          const msgCopy = deepCopy(msg);
-          if(typeof(c.topic) === 'string' && c.topic === msgCopy.topic) {
-            c.eachMessage(msgCopy);
-          }
-          else if(typeof(c.topic) !== 'string' && msgCopy.topic.search(c.topic) > -1) {
-            c.eachMessage(msgCopy);
-          }
-        }
-
-        return new Promise((resolve) => resolve(true));
-      }
-      catch(error) {
-        console.log('Caught error in TestProducer.send: ' + error);
-      }
-    });
-  }
-}
-let checkingOutput = 1;
-
-test('Can create a test kafka object', () => {
-  const kafka = new TestKafka();
-  const producer = kafka.producer();
-  const consumer = kafka.consumer();
-  consumer.subscribe({topic: 'test-topic'});
-  consumer.run({eachMessage:jest.fn()});
-
-  expect(Object.keys(producer.offsets)).toHaveLength(0);
-  expect(kafka.subscribers).toHaveLength(1);
-  expect(kafka.subscribers[0].topic).toEqual('test-topic');
-  expect(kafka.subscribers[0].consumer).toEqual(consumer);
-  expect(kafka.subscribers[0].eachMessage).not.toHaveBeenCalled();
-
-  producer.send({
-    topic: 'test-topic',
-    messages: [{
-      value: 'test message',
-    }],
-  });
-  expect(kafka.subscribers[0].eachMessage).toHaveBeenCalled();
-  expect(producer.offsets['test-topic'].count).toBe(1);
-});
+console.log = jest.fn();
 
 describe('Basic service tests', () => {
   let kafka: TestKafka;
@@ -131,7 +18,7 @@ describe('Basic service tests', () => {
   });
 
   it('All messages end up in DLQ when service is always fail', async () => {
-    const serviceAction = (msg: any, resolve: any, reject: any) => {
+    const serviceAction = (msg: Types.KafkaConsumerMessageInterface, resolve: any, reject: any) => {
       try {
         reject(msg);
       }
@@ -144,11 +31,12 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     const retryLevels = 5;
-    testService.setRetryLevels(retryLevels);
+    await testService.setRetryLevels(retryLevels);
+    await testService.connect();
     await testService.run();
 
     const producer = kafka.producer();
-    const messageCount = 10;
+    const messageCount = 1;
     //mimics sending message for the producer
     for(let i = 0; i < messageCount; i++) {
       await producer.send({
@@ -171,10 +59,11 @@ describe('Basic service tests', () => {
   });
 
   it('All messages succeed when retries is 1', async () => {
-    const serviceAction = (msg: any, resolve: any, reject: any) => {
+    const serviceAction = (msg: Types.KafkaConsumerMessageInterface, resolve: any, reject: any) => {
       //set it to succeed after 1 retry
-      if(msg.messages[0].headers.cascadeMetadata.retries === 1) {
-        msg.messages[0].headers.cascadeMetadata.status = 'success';
+      const { retries, status } = JSON.parse(msg.message.headers.cascadeMetadata);
+      if(retries === 1) {
+        // status = 'success';
         resolve(msg);
       }
       else reject(msg);
@@ -185,11 +74,12 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, success, dlq);
     const retryLevels = 5;
-    testService.setRetryLevels(retryLevels);
+    await testService.setRetryLevels(retryLevels);
+    await testService.connect();
     await testService.run();
 
     const producer = kafka.producer();
-    const messageCount = 10;
+    const messageCount = 1;
     for(let i = 0; i < messageCount; i++) {
       await producer.send({
         topic: 'test-topic',
