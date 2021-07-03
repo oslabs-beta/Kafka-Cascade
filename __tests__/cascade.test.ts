@@ -15,6 +15,10 @@ describe('Basic service tests', () => {
   it('Can create an empty service object', async () => {
     testService = await cascade.service(kafka, 'test-topic', 'test-group', jest.fn(), jest.fn(), jest.fn());
     expect(testService.retries).toBe(0);
+    const callbackTest = jest.fn();
+    testService.on('run', callbackTest);
+    testService.run();
+    //expect(callbackTest).toHaveBeenCalled();
   });
 
   it('All messages end up in DLQ when service is always fail', async () => {

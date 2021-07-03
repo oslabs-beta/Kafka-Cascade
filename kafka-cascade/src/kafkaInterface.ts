@@ -13,6 +13,9 @@ interface ConsumerInterface {
   run: (arg: ({
     eachMessage: (msg: KafkaConsumerMessageInterface) => void,
   })) => any;
+  stop: () => Promise<any>;
+  pause: () => Promise<any>;
+  resume: () => Promise<any>;
 }
 
 interface AdminInterface {
@@ -27,9 +30,8 @@ interface KafkaInterface {
   consumer: ({groupId:string}) => ConsumerInterface;
   admin: () => AdminInterface;
 }
-
+//timeout: number,    //used for added delay per retry
 interface KafkaProducerMessageInterface {
-  topic: string,
   offset?: number,
   partition?:number,
   messages: {

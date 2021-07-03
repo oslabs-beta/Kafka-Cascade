@@ -60,7 +60,7 @@ cascadeController.sendMessage = async (req, res, next) => {
     topic = req.query.topic || topic;
     const message = req.query.message || 'https://www.youtube.com/watch?v=fNLhxKpfCnA';
     let retries = req.query.retries;
-
+    //TODO: add delayTime on to the argument
     res.locals = { message, retries: Number(retries), time: (new Date()).valueOf() };
 
     // check to see if server is running
