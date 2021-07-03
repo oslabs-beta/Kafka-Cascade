@@ -1,22 +1,19 @@
 const { Kafka } = require('kafkajs');
 import * as Types from './kafkaInterface';
 
-// cascadeProducer
-  // attempts retries on messages
-    // increase retryCount on message
-    // sets topic to next retry topic
-    // send to DLQ when out of retry levels
-
 class CascadeProducer {
   producer: Types.ProducerInterface;
   dlqCB: Types.RouteCallback;
   retryTopics: string[];
+  paused: boolean;
+  pausedQueue: Types.KafkaConsumerMessageInterface[]; // maybe linked list
 
   // pass in kafka interface
   constructor(kafka: Types.KafkaInterface, dlqCB: Types.RouteCallback) {
     this.dlqCB = dlqCB;
     this.retryTopics = [];
     this.producer = kafka.producer();
+    this.paused = false;
   }
 
   connect(): Promise<any> {
@@ -27,26 +24,34 @@ class CascadeProducer {
     return this.producer.disconnect();
   }
 
-  /**
-   * kafkaMessage = {
-   *    topic: string,
-   *    partition: number,
-   *    messages: [{
-   *      key: string,
-   *      value: string,
-   *      headers: {
-   *        cascadeMetadata: {
-    *        status: string,
-    *        retries: int,
-    *        topicArr: [],
-    *       }
-   *      }
-   *    }]
-   * }
-   */
+  pause() {
+    this.paused = true;
+  }
+
+  resume(): Promise<any> {
+    this.paused = false;
+    // declare array to store promises
+    const resumePromises = [];
+    while(this.pausedQueue.length) {
+      // push promise into promise array
+      resumePromises.push(this.send(this.pausedQueue.shift()));
+    }
+    // return promise array
+    return Promise.all(resumePromises);
+  }
+
+  stop(): Promise<any> {
+    // send all pending messages to DLQ
+    
+    return
+  }
 
   send(msg: Types.KafkaConsumerMessageInterface): Promise<any> {
     try{
+      if(this.paused) {
+        this.pausedQueue.push(msg);
+        return new Promise(resolve => resolve(true));
+      }
       // access cascadeMetadata - only first message for now, refactor later
       const metadata = JSON.parse(msg.message.headers.cascadeMetadata);
       // check if retries exceeds allowed number of retries

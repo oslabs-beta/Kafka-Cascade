@@ -2,6 +2,8 @@ const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 import CascadeProducer from './cascadeProducer';
 import CascadeConsumer from './cascadeConsumer';
+import { rejects } from 'assert/strict';
+import { resolve } from 'path/posix';
 
 // kafka object to create producer and consumer
 // service callback
@@ -61,6 +63,7 @@ class CascadeService extends EventEmitter {
         resolve(true);
       }
       catch(error) {
+        this.emit('Error in CascadeService.connect: ', error);
         reject(error);
       }
     });  
@@ -125,30 +128,70 @@ class CascadeService extends EventEmitter {
         this.emit('run');
         resolve(status);
       } catch(error) {
-        this.emit('error', error);
+        this.emit('Error in CascadeService.run: ', error);
         reject(error);
       }
       
     });
   }
 
-  stop() {
-    // consumer.stop();
-    this.emit('stop');
+  stop():Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await this.consumer.stop();
+        // call cascadeproducer stop method
+
+        this.emit('stop');
+        resolve(true);
+      } catch (error) {
+        this.emit('Error in CascadeService.stop ' + error);
+        reject(error);
+      }
+
+    });
   }
 
-  pause() {
-    // consumer.pause();
-    this.emit('pause');
+  async pause():Promise<any> {
+    // check to see if service is already paused
+    if (!this.producer.paused) {
+      return new Promise (async (resolve, reject) => {
+        try {
+          await this.consumer.pause();
+          this.producer.pause();
+          this.emit('pause');
+          resolve(true);
+        } catch (error) {
+          this.emit('Error in CascadeService.pause: ' + error);
+          reject(error);
+        }
+      });
+    } else {
+      console.log('cascadeService.pause called while service is already paused!');
+    }
   }
 
   paused() {
-    // return consume.paused();
+    // return producer.paused boolean;
+    return this.producer.paused;
   }
 
-  resume() {
-    // consume.resume();
-    this.emit('resume');
+  async resume(): Promise<any> {
+    // check to see if service is paused
+    if (this.producer.paused) {
+      return new Promise(async (resolve, reject)=> {
+        try{
+          await this.consumer.resume();
+          await this.producer.resume();
+          this.emit('resume');
+          resolve(true);
+        } catch (error){
+          this.emit('Error in CascadeService.resume: ' + error);
+          reject(error);
+        }
+      });
+    } else {
+      console.log('cascadeService.resume called while service is already running!');
+    }
   }
 
   on(event: string, callback: (arg: any) => any) {

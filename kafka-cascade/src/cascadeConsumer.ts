@@ -71,7 +71,7 @@ class CascadeConsumer {
         serviceCB(msg, successCB, rejectCB);
       }
       catch(error) {
-        console.log('Caught error in eachMessage: ' + error);
+        console.log('Caught error in CascadeComsumer eachMessage: ' + error);
       }
     }});
   }
@@ -86,7 +86,18 @@ class CascadeConsumer {
     // this.consumer.disconnect(topics);
     // this.consumer.disconnect(regexTopics);
   }
-  //copy kafka js if not changed
+
+  stop(): Promise<any> {
+    return this.consumer.stop();
+  }
+  
+  pause(): Promise<any> {
+    return this.consumer.pause();
+  }
+
+  resume(): Promise<any> {
+    return this.consumer.resume();
+  }
 } 
 
 export default CascadeConsumer;
