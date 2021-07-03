@@ -7,6 +7,9 @@ class CascadeProducer extends EventEmitter {
   retryTopics: string[];
   paused: boolean;
   pausedQueue: Types.KafkaConsumerMessageInterface[]; // maybe linked list
+  retryOptions: {timeout: number[], batchLimit: number};
+  timeout: number[] = [];
+  sendStorage = {};
 
   // pass in kafka interface
   constructor(kafka: Types.KafkaInterface, dlqCB: Types.RouteCallback) {
@@ -44,7 +47,11 @@ class CascadeProducer extends EventEmitter {
 
   stop(): Promise<any> {
     // send all pending messages to DLQ
-    
+    for(let id in this.sendStorage){
+      let sending = this.sendStorage[id];
+      delete this.sendStorage[id];
+      sending();
+    }
     return
   }
 
@@ -61,8 +68,10 @@ class CascadeProducer extends EventEmitter {
         msg.topic = this.retryTopics[metadata.retries];
         metadata.retries += 1;
         // populate producerMessage object
+        let id = `${msg.topic + metadata.retries}${Date.now()}${Math.floor(Math.random() * Date.now())}`
         const producerMessage = {
           topic: msg.topic, 
+          id,
           messages: [{
             key: msg.message.key, 
             value: msg.message.value, 
@@ -73,12 +82,22 @@ class CascadeProducer extends EventEmitter {
         this.emit('retry', msg);
         
         return new Promise((resolve, reject) => {
-          this.producer.send(producerMessage)
+          //stores each send to sendStorage
+          this.sendStorage[id] = () => {
+            this.producer.send(producerMessage)
             .then(res => resolve(res))
             .catch(res => {
               console.log('Caught an error trying to send: ' + res);
               reject(res);
             });
+          }
+          //sends message after timeout expires
+          setTimeout(() => {
+            const sending = this.sendStorage[id];
+            delete this.sendStorage[id];
+            sending();
+          }, this.timeout[metadata] ? this.timeout[metadata] : 0)
+
         });
       } else {
         this.emit('dlq', msg);
@@ -91,9 +110,26 @@ class CascadeProducer extends EventEmitter {
     }
   }
 
-  setRetryTopics(topicsArr: string[]) {
-    this.retryTopics = topicsArr;    
+
+  setRetryTopics(topicsArr: string[], timeout: number[]) {
+    this.retryTopics = topicsArr;
+    this.timeout = timeout;
   }
 }
 
 export default CascadeProducer;
+
+
+/*
+sendMessage
+if retry level 2
+10 message
+send all 10 message on level 2
+
+
+send 100 success rate 90
+as message hit level 2
+they wont be sent out back when 10 do
+10 
+
+*/

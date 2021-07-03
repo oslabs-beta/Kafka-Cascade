@@ -26,6 +26,7 @@ class CascadeService extends EventEmitter {
   topicsArr : string[];
   producer: CascadeProducer;
   consumer: CascadeConsumer;
+  timeout: number;
 
   events = [ 
     'connect',
@@ -51,6 +52,7 @@ class CascadeService extends EventEmitter {
       this.dlqCB = dlqCB;
       this.retries = 0;
       this.topicsArr = [];
+
 
       // create producers and consumers
       this.producer = new CascadeProducer(kafka, dlqCB);
@@ -90,7 +92,7 @@ class CascadeService extends EventEmitter {
     });  
   }
 
-  setRetryLevels(count: number): Promise<any> {
+  setRetryLevels(count: number, timeout?: number[]): Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
         if(this.topicsArr.length > count){
@@ -105,8 +107,9 @@ class CascadeService extends EventEmitter {
           }
         }
 
-        this.producer.setRetryTopics(this.topicsArr);
+        this.producer.setRetryTopics(this.topicsArr, timeout);
         this.retries = count;
+        
 
         // get an admin client to pre-register topics
         const admin = this.kafka.admin();
