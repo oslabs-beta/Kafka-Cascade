@@ -1,9 +1,9 @@
 const { Kafka } = require('kafkajs');
-// import { Kafka } from 'kafkajs';
+const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 
 
-class CascadeConsumer {
+class CascadeConsumer extends EventEmitter{
   consumer: Types.ConsumerInterface;
   topic: string;
   groupId: string;
@@ -12,6 +12,7 @@ class CascadeConsumer {
   
   //constructor
   constructor(kafkaInterface: Types.KafkaInterface, topic: string, groupId: string, fromBeginning: boolean = false){
+    super();
     //kafka interface to this
     this.consumer = kafkaInterface.consumer({groupId});
     this.topic = topic;
@@ -59,7 +60,7 @@ class CascadeConsumer {
         if (!msg.message.headers) {
           msg.message.headers = {};
         }
-
+        
         if (!msg.message.headers.cascadeMetadata) {
           msg.message.headers.cascadeMetadata = JSON.stringify({
             status: '',
@@ -67,6 +68,7 @@ class CascadeConsumer {
             topicArr: [],
           })
         }
+        if(msg.topic === this.topic) this.emit('receive', msg);
         // call the service
         serviceCB(msg, successCB, rejectCB);
       }
@@ -97,6 +99,10 @@ class CascadeConsumer {
 
   resume(): Promise<any> {
     return this.consumer.resume();
+  }
+
+  on(event: string, callback: (arg: any) => any) {
+    super.on(event, callback);
   }
 } 
 
