@@ -2,16 +2,11 @@
   "name": "kafka-cascade-demo",
   "version": "0.0.1",
   "description": "DLQ handling for KafkaJS_DEMO",
-  "main": ".demo/dist.js",
+  "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "demo": "npm start & npm run kafka",
-    "start": "NODE_ENV=production; webpack & ts-node server/server.ts",
-    "dev": "NODE_ENV=production; webpack-dev-server --open & tsc --watch --project . --outDir ./dist --onSuccess \"nodemon ./dist/server.js\"",
-    "kakfa": "docker-compose up"
-  },
-  "scriptsComments": {
-    "starting": ""
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "dev": "webpack serve"
   },
   "keywords": [
     "Kafka",
@@ -25,32 +20,22 @@
     "url": "https://github.com/oslabs-beta/Kafka-Cascade"
   },
   "dependencies": {
-    "@types/react": "^17.0.13",
+    "@types/react": "^17.0.11",
     "@types/react-dom": "^17.0.8",
-    "kafkajs": "^1.15.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router": "^5.2.0",
-    "webpack-cli": "^4.7.2"
+    "typescript": "^4.3.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.6",
-    "@babel/preset-env": "^7.14.7",
-    "@babel/preset-typescript": "^7.14.5",
-    "@types/express": "^4.17.12",
-    "@types/jest": "^26.0.23",
-    "@types/node": "^15.12.5",
-    "babel-jest": "^27.0.6",
-    "babel-loader": "^8.2.2",
-    "express": "^4.17.1",
-    "jest": "^27.0.6",
-    "nodejs-websocket": "^1.7.2",
-    "nodemon": "^2.0.7",
-    "ts-jest": "^27.0.3",
+    "css-loader": "^5.2.6",
+    "dotenv-webpack": "^7.0.3",
+    "html-webpack-plugin": "^5.3.2",
+    "sass": "^1.35.1",
+    "sass-loader": "^12.1.0",
+    "style-loader": "^3.0.0",
     "ts-loader": "^9.2.3",
-    "ts-node": "^10.0.0",
-    "typescript": "^4.3.4",
-    "webpack": "^5.42.1",
+    "webpack": "^5.41.0",
+    "webpack-cli": "^4.7.2",
     "webpack-dev-server": "^3.11.2"
   }
 }
