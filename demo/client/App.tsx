@@ -1,11 +1,13 @@
 import React from "react";
 import { FC } from 'react';
-import { Route, Switch } from "react-router-dom";
+// import { Route, Switch } from "react-router-dom";
 
-export default function App(){
+export class App(){
+  render() {
    return( 
-    <main id = 'app'>
+    <main>
       <p>test text</p>
     </main>
    );
+  }
 };

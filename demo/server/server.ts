@@ -8,7 +8,11 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res)=>{
-  res.status(200).send(path.join(__dirname, '../index.html'))
+  res.status(200).sendFile(path.join(__dirname, '../index.html'));
+})
+
+app.get('/dist/bundle.js', (req, res)=>{
+  res.status(200).sendFile(path.join(__dirname, '../dist/bundle.js'));
 })
 
 // start service

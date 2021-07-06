@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "rootDir": "client",
     "outDir": "./dist/",
-    "module": "es6",
+    "module": "commonjs",
     "target": "es5",
     "jsx": "react",
-    "allowJs": true,
-    "moduleResolution": "node"
+    "esModuleInterop": true, 
+    "allowJs": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "client"
   ]
 
 }

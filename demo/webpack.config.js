@@ -11,13 +11,16 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        loader: 'ts-loader',
         exclude: /node_modules/,
+        options: {
+          transpileOnly: true,
+        },
       },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js', '.jsx'],
   },
   devServer: {
     publicPath: '/dist/',

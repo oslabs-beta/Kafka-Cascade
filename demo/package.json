@@ -5,9 +5,13 @@
   "main": ".demo/dist.js",
   "scripts": {
     "build": "tsc",
-    "demo": "ts-node \"./server/server.ts\" & docker-compose up",
-    "dev": "cross-env NODE_ENV=development; concurrently \"nodemon server/server.ts\"  \"webpack-dev-server --open\"",
-    "start": "cross-env NODE_ENV=production; concurrently \"webpack\" \"node server/server.ts\""
+    "demo": "npm start & npm run kafka",
+    "start": "NODE_ENV=production; webpack & ts-node server/server.ts",
+    "dev": "NODE_ENV=production; webpack-dev-server --open & tsc --watch --project . --outDir ./dist --onSuccess \"nodemon ./dist/server.js\"",
+    "kakfa": "docker-compose up"
+  },
+  "scriptsComments": {
+    "starting": ""
   },
   "keywords": [
     "Kafka",
@@ -26,7 +30,8 @@
     "kafkajs": "^1.15.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router": "^5.2.0"
+    "react-router": "^5.2.0",
+    "webpack-cli": "^4.7.2"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
@@ -44,6 +49,8 @@
     "ts-jest": "^27.0.3",
     "ts-loader": "^9.2.3",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.4"
+    "typescript": "^4.3.4",
+    "webpack": "^5.42.1",
+    "webpack-dev-server": "^3.11.2"
   }
 }
