@@ -143,13 +143,15 @@ class CascadeService extends EventEmitter {
       try {
         const status = await this.consumer.run(this.serviceCB, 
           (msg) => { this.emit('success', msg); this.successCB(msg) }, 
-          (msg) => {
+          async (msg) => {
             try {
-              this.producer.send(msg);
+              await this.producer.send(msg);
             }
             catch(error) {
-              console.log('Caught error in reject callback: ' + error);
-              throw error;
+              console.log('test', 'Error in CascadeProducer.send:', error);
+              // try {
+              // this.emit('error', 'Error in CascadeProducer.send:', error);
+              // } catch(error2) {}
             }
           });
         this.emit('run');

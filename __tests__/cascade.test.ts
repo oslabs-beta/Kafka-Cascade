@@ -2,7 +2,10 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './cascade.mockclient.test';
 
+// const log = console.log;
+// console.log = (test, ...args) => test === 'test' && log(args); 
 console.log = jest.fn();
+process.env.test = 'test';
 
 describe('Basic service tests', () => {
   let kafka: TestKafka;
@@ -46,6 +49,7 @@ describe('Basic service tests', () => {
         }],
       });
     }
+
     //checks the number of times the message was sent
     expect(producer.offsets['test-topic'].count).toBe(messageCount);
     const testServiceOffsets = testService.producer.producer.offsets;

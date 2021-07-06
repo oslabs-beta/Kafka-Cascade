@@ -94,7 +94,7 @@ class TestProducer {
         return new Promise((resolve) => resolve(true));
       }
       catch(error) {
-        console.log('Caught error in TestProducer.send: ' + error);
+        console.log('test', 'Caught error in TestProducer.send: ' + error);
         return new Promise((resolve, reject) => reject(error));
       }
     });

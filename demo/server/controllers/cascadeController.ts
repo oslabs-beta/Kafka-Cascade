@@ -14,17 +14,19 @@ const groupId = 'test-group';
 const serviceCB:Cascade.Types.ServiceCallback = (msg, resolve, reject) => {
   const message = JSON.parse(msg.message.value);
   const header = JSON.parse(msg.message.headers.cascadeMetadata);
-  console.log(`Received message ${msg.topic} in service callback: resolve at ${message.retries}, currently at ${header.retries}`);
+  console.log(`Received message ${msg.topic} in service callback: resolve at ${message.retries}, currently at ${header.retries} ((${Date.now() - message.time}ms))`);
   
   if(header.retries === message.retries) resolve(msg);
   else reject(msg);
 };
 const successCB:Cascade.Types.RouteCallback = (msg) => {
+  const { time } = JSON.parse(msg.message.value);
   const retries = JSON.parse(msg.message.headers.cascadeMetadata).retries
-  console.log('Received message in success callback: ' + retries);
+  console.log(`Received message in success callback: ${retries} (${Date.now() - time}ms)`);
 };
 const dlqCB:Cascade.Types.RouteCallback = (msg) => {
-  console.log('Received message in DLQ');
+  const { time } = JSON.parse(msg.message.value);
+  console.log(`Received message in DLQ (${Date.now() - time}ms)`);
 };
 
 var service: Cascade.CascadeService;
@@ -35,7 +37,7 @@ cascadeController.startService = async (req: {query: {retries:string}}, res, nex
   try {
     const { retries } = req.query;
     service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-    await service.setRetryLevels(6);
+    await service.setRetryLevels(6, [500, 1000, 2000, 4000, 8000, 16000]);
     
     await service.connect();
     await producer.connect();
