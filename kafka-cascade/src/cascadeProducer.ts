@@ -68,35 +68,38 @@ class CascadeProducer extends EventEmitter {
         msg.topic = this.retryTopics[metadata.retries];
         metadata.retries += 1;
         // populate producerMessage object
-        let id = `${msg.topic + metadata.retries}${Date.now()}${Math.floor(Math.random() * Date.now())}`
+        let id = `${Date.now()}${Math.floor(Math.random() * Date.now())}`;
         const producerMessage = {
           topic: msg.topic, 
-          id,
           messages: [{
             key: msg.message.key, 
             value: msg.message.value, 
             headers: { ...msg.message.headers, cascadeMetadata: JSON.stringify(metadata) }
           }]
         };
-
-        this.emit('retry', msg);
         
         return new Promise((resolve, reject) => {
           //stores each send to sendStorage
+          
           this.sendStorage[id] = () => {
+            this.emit('retry', producerMessage);
             this.producer.send(producerMessage)
-            .then(res => resolve(res))
-            .catch(res => {
-              console.log('Caught an error trying to send: ' + res);
-              reject(res);
-            });
+              .then(res => resolve(res))
+              .catch(res => {
+                console.log('Caught an error trying to send: ' + res);
+                reject(res);
+              });
           }
           //sends message after timeout expires
-          setTimeout(() => {
+          const scheduler = () => {
             const sending = this.sendStorage[id];
             delete this.sendStorage[id];
             sending();
-          }, this.timeout[metadata] ? this.timeout[metadata] : 0)
+          }
+
+          if(process.env.test === 'test') scheduler();
+          else setTimeout(this.scheduler.bind(this), this.timeout[metadata.retries-1]);
+
 
         });
       } else {
@@ -113,7 +116,10 @@ class CascadeProducer extends EventEmitter {
 
   setRetryTopics(topicsArr: string[], timeout: number[]) {
     this.retryTopics = topicsArr;
-    this.timeout = timeout;
+    if(timeout) this.timeout = timeout;
+    else {
+      this.timeout = (new Array(topicsArr.length)).fill(1);
+    }
   }
 }
 

@@ -3,6 +3,7 @@ import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './cascade.mockclient.test';
 
 console.log = jest.fn();
+process.env.test = 'test';
 
 describe('Basic service tests', () => {
   let kafka: TestKafka;
@@ -60,12 +61,17 @@ describe('Basic service tests', () => {
     await testService.connect();
     await testService.run();
     const producer = kafka.producer();
-    await producer.send({
-      topic: 'test-topic',
-      messages: [{
-        value: 'test message',
-      }],
-    });
+    try {
+      await producer.send({
+        topic: 'test-topic',
+        messages: [{
+          value: 'test message',
+        }],
+      });
+    }
+    catch(error) {
+      console.log('test', 'caught an error while sending:', error);
+    }
 
     expect(callbackTest).toHaveBeenCalled();
   });
@@ -114,6 +120,6 @@ describe('Basic service tests', () => {
 
     expect(successCB).toHaveBeenCalledTimes(2);
     expect(dlqCB).toHaveBeenCalledTimes(1);
-    expect(retryCallback).toHaveBeenCalledTimes(5);
+    expect(retryCallback).toHaveBeenCalledTimes(5);  
   });
 });
