@@ -1,13 +1,28 @@
-import React from "react";
-import { FC } from 'react';
-// import { Route, Switch } from "react-router-dom";
+import React, { FC, useState } from 'react';
+// import './app.scss';
 
-export class App(){
-  render() {
-   return( 
-    <main>
-      <p>test text</p>
-    </main>
-   );
+interface AppProps {
+  
+}
+
+interface AppState {
+  
+}
+
+export class App extends React.Component<AppProps, AppState> {
+  constructor(props: AppProps) {
+    super(props);
+
+    this.state = {
+      
+    };
   }
-};
+
+  render() {
+    return (
+      <div className='app'>
+        <h1>Test App</h1>
+      </div>
+    );
+  }
+}

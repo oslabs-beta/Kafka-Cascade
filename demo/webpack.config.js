@@ -5,7 +5,7 @@ const Dotenv = require('dotenv-webpack');
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
   devtool: 'inline-source-map',
-  entry: './src/index.tsx',
+  entry: './client/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
@@ -14,7 +14,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html',
+      template: './index.html',
     }),
     new Dotenv(),
   ],
@@ -43,7 +43,7 @@ module.exports = {
     publicPath: '/dist/',
     proxy: {
       '/': 'http://localhost:3000',
-    }
+    },
     compress: true,
     hot: true,
     historyApiFallback: true,
