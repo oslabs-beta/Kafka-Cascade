@@ -46,6 +46,7 @@ class CascadeConsumer extends EventEmitter{
         resolve(true);
       }
       catch(error) {
+        this.emit('error', error);
         reject(error);
       }
     });
@@ -70,10 +71,16 @@ class CascadeConsumer extends EventEmitter{
         }
         if(msg.topic === this.topic) this.emit('receive', msg);
         // call the service
+      }
+      catch(error) {
+        this.emit('error', error);
+      }
+
+      try {
         serviceCB(msg, successCB, rejectCB);
       }
       catch(error) {
-        console.log('Caught error in CascadeComsumer eachMessage: ' + error);
+        this.emit('serviceError', error);
       }
     }});
   }

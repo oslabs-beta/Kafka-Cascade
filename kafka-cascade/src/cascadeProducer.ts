@@ -7,8 +7,10 @@ class CascadeProducer extends EventEmitter {
   retryTopics: string[];
   paused: boolean;
   pausedQueue: Types.KafkaConsumerMessageInterface[]; // maybe linked list
-  retryOptions: {timeout: number[], batchLimit: number};
+  retryOptions: {timeout?: number[], batchLimit: number};
   timeout: number[] = [];
+  batch: Types.KafkaProducerMessageInterface[] = [];
+  batchLimit: number[] = [];
   sendStorage = {};
 
   // pass in kafka interface
@@ -47,12 +49,29 @@ class CascadeProducer extends EventEmitter {
 
   stop(): Promise<any> {
     // send all pending messages to DLQ
-    for(let id in this.sendStorage){
-      let sending = this.sendStorage[id];
+    for(let id in this.sendStorage) {
+      let {msg} = this.sendStorage[id];
       delete this.sendStorage[id];
-      sending();
+      this.dlqCB(msg);
     }
-    return
+    
+    this.batch.forEach((batch, i) => {
+      batch.messages.forEach(msg => {
+        const conMsg = {
+          topic: this.topic,
+          partition: -1,
+          offset: -1,
+          message: msg,
+        }
+        this.dlqCB(conMsg);
+      });
+      this.batch[i] = {
+        topic: this.retryTopics[i],
+        messages: [],
+      };
+    });
+    
+    return new Promise((resolve) => resolve(true));
   }
 
   send(msg: Types.KafkaConsumerMessageInterface): Promise<any> {
@@ -78,30 +97,8 @@ class CascadeProducer extends EventEmitter {
           }]
         };
         
-        return new Promise((resolve, reject) => {
-          //stores each send to sendStorage
-          
-          this.sendStorage[id] = () => {
-            this.emit('retry', producerMessage);
-            this.producer.send(producerMessage)
-              .then(res => resolve(res))
-              .catch(res => {
-                console.log('Caught an error trying to send: ' + res);
-                reject(res);
-              });
-          }
-          //sends message after timeout expires
-          const scheduler = () => {
-            const sending = this.sendStorage[id];
-            delete this.sendStorage[id];
-            sending();
-          }
-
-          if(process.env.test === 'test') scheduler();
-          else setTimeout(this.scheduler.bind(this), this.timeout[metadata.retries-1]);
-
-
-        });
+        if(this.timeout[metadata.retries - 1] > 0) return this.sendTimeout(id, producerMessage, metadata.retries - 1); 
+        else return this.sendBatch(producerMessage, metadata.retries - 1);
       } else {
         this.emit('dlq', msg);
         this.dlqCB(msg);
@@ -109,33 +106,76 @@ class CascadeProducer extends EventEmitter {
       }
     }
     catch(error) {
-      console.log('Caught error in CascadeProducer.send: ' + error);
+      this.emit('error', error);
     }
   }
+  
+  //Used by send
+  //sets delay for producer messages
+  sendTimeout(id, msg, retries) {
+    return new Promise((resolve, reject) => {
+      //stores each send and msg to sendStorage[id] 
+      this.sendStorage[id] = {
+        sending: () => {
+          this.emit('retry', msg);
+          this.producer.send(msg)
+            .then(res => resolve(res))
+            .catch(res => {
+              reject(res);
+           });
+        }, msg: msg };
+      //sends message after timeout expires
+      const scheduler = () => {
+        if(this.sendStorage[id]){
+          const {sending} = this.sendStorage[id];
+          delete this.sendStorage[id];
+          sending();
+        }
+      }
+      if(process.env.test === 'test') scheduler();
+      else setTimeout(scheduler, this.timeout[retries]);
+    });
+  };
 
+  //Used by send
+  //sets batch processing
+  sendBatch(msg, retries){
+    return new Promise((resolve, reject) => {
+      this.batch[retries].messages.push(msg.messages[0]);
+      if(this.batch[retries].messages.length === this.batchLimit[retries]) {
+        this.emit('retry', this.batch[retries]);
+        this.producer.send(this.batch[retries])
+          .then(res => resolve(res))
+          .catch(res => {
+            console.log('Caught an error trying to send batch: ' + res);
+            reject(res);
+        });
+        this.batch[retries] = {
+          topic: this.retryTopics[retries],
+          messages: [],
+        };
+      }
+      else resolve(true);
+    });
+  }
 
-  setRetryTopics(topicsArr: string[], timeout: number[]) {
+  //User is ability to set the timeout and batchLimit
+  setRetryTopics(topicsArr: string[], options?: {timeoutLimit?: number[], batchLimit: number[]}) {
     this.retryTopics = topicsArr;
-    if(timeout) this.timeout = timeout;
-    else {
-      this.timeout = (new Array(topicsArr.length)).fill(1);
-    }
+    if(options && options.timeoutLimit) this.timeout = options.timeoutLimit;
+    else this.timeout = (new Array(topicsArr.length)).fill(0);
+    
+    if(options && options.batchLimit) this.batchLimit = options.batchLimit;
+    else this.batchLimit = (new Array(topicsArr.length)).fill(1);
+
+    this.retryTopics.forEach((topic) => {
+      const emptyMsg = {
+        topic,
+        messages: [],
+      };
+      this.batch.push(emptyMsg);
+    });
   }
 }
 
 export default CascadeProducer;
-
-
-/*
-sendMessage
-if retry level 2
-10 message
-send all 10 message on level 2
-
-
-send 100 success rate 90
-as message hit level 2
-they wont be sent out back when 10 do
-10 
-
-*/

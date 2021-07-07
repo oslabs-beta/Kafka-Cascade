@@ -39,7 +39,7 @@ describe('Basic service tests', () => {
     await testService.run();
 
     const producer = kafka.producer();
-    const messageCount = 1;
+    const messageCount = 10;
     //mimics sending message for the producer
     for(let i = 0; i < messageCount; i++) {
       await producer.send({
@@ -83,7 +83,7 @@ describe('Basic service tests', () => {
     await testService.run();
 
     const producer = kafka.producer();
-    const messageCount = 1;
+    const messageCount = 10;
     for(let i = 0; i < messageCount; i++) {
       await producer.send({
         topic: 'test-topic',
