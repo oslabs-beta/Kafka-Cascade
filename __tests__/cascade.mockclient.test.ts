@@ -20,6 +20,7 @@ class TestConsumer {
   disconnect: any;
   subscribe: any;
   run: any;
+  stop: any;
   pause: any;
   resume: any;
   paused:boolean = false;
@@ -39,6 +40,9 @@ class TestConsumer {
       kafka.subscribers.forEach(c => {
         if(c.consumer === this) c.eachMessage = options.eachMessage;
       });
+      return new Promise((resolve) => resolve(true));
+    });
+    this.stop = jest.fn(() => {
       return new Promise((resolve) => resolve(true));
     });
     this.pause = jest.fn(() => {
@@ -72,25 +76,28 @@ class TestProducer {
     //defines the send function
     this.send = jest.fn((msg: Types.KafkaProducerMessageInterface) => {
       try {
-        //check if sent for the given topic
-        if(!this.offsets[msg.topic]) this.offsets[msg.topic] = {count:0};
-        
-        for(let i = 0; i < kafka.subscribers.length; i++) {
-          const c = kafka.subscribers[i];
-          const consumerMsg:Types.KafkaConsumerMessageInterface = {
-            topic: msg.topic,
-            partition:this.partition,
-            offset: this.offsets[msg.topic].count,
-            message: msg.messages[0],
+        msg.messages.forEach(m => {
+          //check if sent for the given topic
+          if(!this.offsets[msg.topic]) this.offsets[msg.topic] = {count:0};
+          
+          for(let i = 0; i < kafka.subscribers.length; i++) {
+            const c = kafka.subscribers[i];
+            const consumerMsg:Types.KafkaConsumerMessageInterface = {
+              topic: msg.topic,
+              partition:this.partition,
+              offset: this.offsets[msg.topic].count,
+              message: m,
+            }
+            if(typeof(c.topic) === 'string' && c.topic === consumerMsg.topic) {
+              c.eachMessage(consumerMsg);
+            }
+            else if(typeof(c.topic) !== 'string' && consumerMsg.topic.search(c.topic) > -1) {
+              c.eachMessage(consumerMsg);
+            }
           }
-          if(typeof(c.topic) === 'string' && c.topic === consumerMsg.topic) {
-            c.eachMessage(consumerMsg);
-          }
-          else if(typeof(c.topic) !== 'string' && consumerMsg.topic.search(c.topic) > -1) {
-            c.eachMessage(consumerMsg);
-          }
-        }
-        this.offsets[msg.topic].count++;
+          this.offsets[msg.topic].count++;
+          
+        });
         return new Promise((resolve) => resolve(true));
       }
       catch(error) {

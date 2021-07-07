@@ -1,10 +1,19 @@
 const express = require('express');
 import cascadeController from './controllers/cascadeController';
+const path = require ('path');
 
 const PORT = 3000;
 const app = express();
 
 app.use(express.json());
+
+app.get('/', (req, res)=>{
+  res.status(200).sendFile(path.join(__dirname, '../index.html'));
+})
+
+app.get('/dist/bundle.js', (req, res)=>{
+  res.status(200).sendFile(path.join(__dirname, '../dist/bundle.js'));
+})
 
 // start service
 app.post('/start', cascadeController.startService, (req, res) => {

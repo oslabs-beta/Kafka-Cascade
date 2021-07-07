@@ -80,6 +80,7 @@ class CascadeService extends EventEmitter {
   disconnect():Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
+        await this.producer.stop();
         await this.producer.disconnect();
         await this.consumer.disconnect();
         this.emit('disconnect');
@@ -92,7 +93,7 @@ class CascadeService extends EventEmitter {
     });  
   }
 
-  setRetryLevels(count: number, timeout?: number[]): Promise<any> {
+  setRetryLevels(count: number, options?: {timeoutLimit?: number[], batchLimit: number[]}): Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
         if(this.topicsArr.length > count){
@@ -107,7 +108,7 @@ class CascadeService extends EventEmitter {
           }
         }
 
-        this.producer.setRetryTopics(this.topicsArr, timeout);
+        this.producer.setRetryTopics(this.topicsArr, options);
         this.retries = count;
         
 
@@ -168,7 +169,7 @@ class CascadeService extends EventEmitter {
     return new Promise(async (resolve, reject) => {
       try {
         await this.consumer.stop();
-        // call cascadeproducer stop method
+        await this.producer.stop();
 
         this.emit('stop');
         resolve(true);

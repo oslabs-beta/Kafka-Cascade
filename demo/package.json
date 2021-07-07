@@ -1,0 +1,41 @@
+{
+  "name": "kafka-cascade-demo",
+  "version": "0.0.1",
+  "description": "DLQ handling for KafkaJS_DEMO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "dev": "webpack serve"
+  },
+  "keywords": [
+    "Kafka",
+    "Message Reprocessing",
+    "Dead Letter Queue"
+  ],
+  "author": "Davette Byran, Michael Weber, Robert Du, Seung Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oslabs-beta/Kafka-Cascade"
+  },
+  "dependencies": {
+    "@types/react": "^17.0.11",
+    "@types/react-dom": "^17.0.8",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typescript": "^4.3.4"
+  },
+  "devDependencies": {
+    "css-loader": "^5.2.6",
+    "dotenv-webpack": "^7.0.3",
+    "html-webpack-plugin": "^5.3.2",
+    "sass": "^1.35.1",
+    "sass-loader": "^12.1.0",
+    "style-loader": "^3.0.0",
+    "ts-loader": "^9.2.3",
+    "webpack": "^5.41.0",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
