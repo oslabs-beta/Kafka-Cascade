@@ -18,6 +18,7 @@ module.exports = {
       }
     });
   },
+  getMetadata: (msg: Types.KafkaConsumerMessageInterface) => JSON.parse(msg.message.headers.cascadeMetadata),
 };
 
 export {

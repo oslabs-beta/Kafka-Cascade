@@ -106,7 +106,7 @@ class CascadeProducer extends EventEmitter {
       }
     }
     catch(error) {
-      console.log('Caught error in CascadeProducer.send: ' + error);
+      this.emit('error', error);
     }
   }
   
