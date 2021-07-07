@@ -2,7 +2,9 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './cascade.mockclient.test';
 
-console.log = jest.fn();
+const log = console.log;
+console.log = (test, ...args) => test === 'test' && log(args); 
+// console.log = jest.fn();
 process.env.test = 'test';
 
 describe('Basic service tests', () => {
@@ -50,9 +52,43 @@ describe('Basic service tests', () => {
     expect(callbackTest).toHaveBeenCalledTimes(2);
   });
 
-  // it('Fires stop events', async () => {
+  it('Fires stop events', async () => {
+    const retryLevels = 3;
+    const messageCount = 5;
+    const dlq = jest.fn();
+    const service = (msg, resolve, reject) => reject(msg);
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', service, jest.fn(), dlq);
+    const callbackTest = jest.fn();
+    testService.on('stop', callbackTest);
 
-  // });
+    await testService.setRetryLevels(retryLevels, { batchLimit:(new Array(2)).fill(messageCount) } );
+    await testService.connect();
+    await testService.run();
+
+    const producer = kafka.producer();
+    for(let i = 0; i < messageCount - 1; i++) {
+      await producer.send({
+        topic: 'test-topic',
+        messages: [{
+          value: 'test message',
+        }],
+      });
+    }
+    try {
+      await testService.stop();
+    }
+    catch(error) {
+      console.log('test', 'caught an error while sending:', error);
+    }
+
+    expect(callbackTest).toHaveBeenCalled();
+    testService.producer.batch.forEach(batch => {
+      expect(batch.messages).toHaveLength(0);
+    });
+    const testServiceOffsets = testService.producer.producer.offsets;
+    expect(Object.keys(testServiceOffsets)).toHaveLength(0);
+    expect(dlq).toHaveBeenCalledTimes(messageCount - 1);
+  });
 
   it('Fires receive when new message comes in', async () => {
     testService = await cascade.service(kafka, 'test-topic', 'test-group', jest.fn(), jest.fn(), jest.fn());

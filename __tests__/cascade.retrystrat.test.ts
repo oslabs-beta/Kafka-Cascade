@@ -2,9 +2,9 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka, TestProducer } from './cascade.mockclient.test';
 
-const log = console.log;
-console.log = (test, ...args) => test === 'test' && log(args); 
-// console.log = jest.fn();
+// const log = console.log;
+// console.log = (test, ...args) => test === 'test' && log(args); 
+console.log = jest.fn();
 process.env.test = 'test';
 
 describe('Testing timeout retry strategy', () => {
@@ -29,7 +29,7 @@ describe('Testing timeout retry strategy', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     const retryLevels = 2;
-    await testService.setRetryLevels(retryLevels, { timeout:(new Array(retryLevels).fill(1)) } );
+    await testService.setRetryLevels(retryLevels, { timeoutLimit:(new Array(retryLevels).fill(1)) } );
     await testService.connect();
     await testService.run();
 
@@ -101,7 +101,9 @@ describe('Testing batching retry strategy', () => {
   });
 
   it('MessageCount is not change before the number of messages equals to batch number', () => {
-    expect(producer.offsets['test-topic'].count).toBe(0);
+    expect(producer.offsets['test-topic'].count).toBe(messageCount - 1);
+    const testServiceOffsets = testService.producer.producer.offsets;
+    expect(Object.keys(testServiceOffsets)).toHaveLength(0);
     expect(testService.producer.batch[0].messages).toHaveLength(messageCount - 1);
     expect(dlq).not.toHaveBeenCalled();
   });
@@ -113,7 +115,13 @@ describe('Testing batching retry strategy', () => {
         value: 'test message',
       }],
     });
+    
     expect(producer.offsets['test-topic'].count).toBe(messageCount);
+    const testServiceOffsets = testService.producer.producer.offsets;
+    expect(Object.keys(testServiceOffsets)).toHaveLength(retryLevels);
+    for(let topic in testServiceOffsets) {
+      expect(testServiceOffsets[topic].count).toBe(messageCount);
+    }
     expect(dlq).toHaveBeenCalledTimes(messageCount);
   });
   

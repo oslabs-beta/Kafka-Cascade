@@ -55,21 +55,21 @@ class CascadeProducer extends EventEmitter {
       this.dlqCB(msg);
     }
     
-    for(let retry in this.batch) {
-      for(let index in this.batch[retry]){
-        const msg = {
+    this.batch.forEach((batch, i) => {
+      batch.messages.forEach(msg => {
+        const conMsg = {
           topic: this.topic,
           partition: -1,
           offset: -1,
-          message: this.batch[retry][index]
+          message: msg,
         }
-        this.dlqCB(msg);
-      }
-      this.batch[retry] = {
-        topic: this.retryTopics[retry],
+        this.dlqCB(conMsg);
+      });
+      this.batch[i] = {
+        topic: this.retryTopics[i],
         messages: [],
       };
-    }
+    });
     
     return new Promise((resolve) => resolve(true));
   }
@@ -97,7 +97,7 @@ class CascadeProducer extends EventEmitter {
           }]
         };
         
-        if(this.timeout[metadata.retries] > 0) return this.setTimeout(id, producerMessage, metadata.retries - 1); 
+        if(this.timeout[metadata.retries - 1] > 0) return this.sendTimeout(id, producerMessage, metadata.retries - 1); 
         else return this.sendBatch(producerMessage, metadata.retries - 1);
       } else {
         this.emit('dlq', msg);
@@ -121,7 +121,6 @@ class CascadeProducer extends EventEmitter {
           this.producer.send(msg)
             .then(res => resolve(res))
             .catch(res => {
-              console.log('Caught an error trying to send timeout: ' + res);
               reject(res);
            });
         }, msg: msg };
@@ -161,9 +160,9 @@ class CascadeProducer extends EventEmitter {
   }
 
   //User is ability to set the timeout and batchLimit
-  setRetryTopics(topicsArr: string[], options?: {timeout?: number[], batchLimit: number[]}) {
+  setRetryTopics(topicsArr: string[], options?: {timeoutLimit?: number[], batchLimit: number[]}) {
     this.retryTopics = topicsArr;
-    if(options && options.timeout) this.timeout = options.timeout;
+    if(options && options.timeoutLimit) this.timeout = options.timeoutLimit;
     else this.timeout = (new Array(topicsArr.length)).fill(0);
     
     if(options && options.batchLimit) this.batchLimit = options.batchLimit;
@@ -180,18 +179,3 @@ class CascadeProducer extends EventEmitter {
 }
 
 export default CascadeProducer;
-
-
-/*
-sendMessage
-if retry level 2
-10 message
-send all 10 message on level 2
-
-
-send 100 success rate 90
-as message hit level 2
-they wont be sent out back when 10 do
-10 
-
-*/
