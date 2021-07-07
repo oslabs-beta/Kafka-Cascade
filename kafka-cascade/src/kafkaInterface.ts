@@ -33,7 +33,6 @@ interface KafkaProducerMessageInterface {
   topic: string,
   offset?: number,
   partition?:number,
-  id?: string;
   messages: {
     key?: string,
     value: string,

@@ -7,8 +7,10 @@ class CascadeProducer extends EventEmitter {
   retryTopics: string[];
   paused: boolean;
   pausedQueue: Types.KafkaConsumerMessageInterface[]; // maybe linked list
-  retryOptions: {timeout: number[], batchLimit: number};
+  retryOptions: {timeout?: number[], batchLimit: number};
   timeout: number[] = [];
+  batch: Types.KafkaProducerMessageInterface[] = [];
+  batchLimit: number[] = [];
   sendStorage = {};
 
   // pass in kafka interface
@@ -47,12 +49,29 @@ class CascadeProducer extends EventEmitter {
 
   stop(): Promise<any> {
     // send all pending messages to DLQ
-    for(let id in this.sendStorage){
-      let sending = this.sendStorage[id];
+    for(let id in this.sendStorage) {
+      let {msg} = this.sendStorage[id];
       delete this.sendStorage[id];
-      sending();
+      this.dlqCB(msg);
     }
-    return
+    
+    for(let retry in this.batch) {
+      for(let index in this.batch[retry]){
+        const msg = {
+          topic: this.topic,
+          partition: -1,
+          offset: -1,
+          message: this.batch[retry][index]
+        }
+        this.dlqCB(msg);
+      }
+      this.batch[retry] = {
+        topic: this.retryTopics[retry],
+        messages: [],
+      };
+    }
+    
+    return new Promise((resolve) => resolve(true));
   }
 
   send(msg: Types.KafkaConsumerMessageInterface): Promise<any> {
@@ -78,30 +97,8 @@ class CascadeProducer extends EventEmitter {
           }]
         };
         
-        return new Promise((resolve, reject) => {
-          //stores each send to sendStorage
-          
-          this.sendStorage[id] = () => {
-            this.emit('retry', producerMessage);
-            this.producer.send(producerMessage)
-              .then(res => resolve(res))
-              .catch(res => {
-                console.log('Caught an error trying to send: ' + res);
-                reject(res);
-              });
-          }
-          //sends message after timeout expires
-          const scheduler = () => {
-            const sending = this.sendStorage[id];
-            delete this.sendStorage[id];
-            sending();
-          }
-
-          if(process.env.test === 'test') scheduler();
-          else setTimeout(this.scheduler.bind(this), this.timeout[metadata.retries-1]);
-
-
-        });
+        if(this.timeout[metadata.retries] > 0) return this.setTimeout(id, producerMessage, metadata.retries - 1); 
+        else return this.sendBatch(producerMessage, metadata.retries - 1);
       } else {
         this.emit('dlq', msg);
         this.dlqCB(msg);
@@ -112,14 +109,73 @@ class CascadeProducer extends EventEmitter {
       console.log('Caught error in CascadeProducer.send: ' + error);
     }
   }
+  
+  //Used by send
+  //sets delay for producer messages
+  sendTimeout(id, msg, retries) {
+    return new Promise((resolve, reject) => {
+      //stores each send and msg to sendStorage[id] 
+      this.sendStorage[id] = {
+        sending: () => {
+          this.emit('retry', msg);
+          this.producer.send(msg)
+            .then(res => resolve(res))
+            .catch(res => {
+              console.log('Caught an error trying to send timeout: ' + res);
+              reject(res);
+           });
+        }, msg: msg };
+      //sends message after timeout expires
+      const scheduler = () => {
+        if(this.sendStorage[id]){
+          const {sending} = this.sendStorage[id];
+          delete this.sendStorage[id];
+          sending();
+        }
+      }
+      if(process.env.test === 'test') scheduler();
+      else setTimeout(scheduler, this.timeout[retries]);
+    });
+  };
 
+  //Used by send
+  //sets batch processing
+  sendBatch(msg, retries){
+    return new Promise((resolve, reject) => {
+      this.batch[retries].messages.push(msg.messages[0]);
+      if(this.batch[retries].messages.length === this.batchLimit[retries]) {
+        this.emit('retry', this.batch[retries]);
+        this.producer.send(this.batch[retries])
+          .then(res => resolve(res))
+          .catch(res => {
+            console.log('Caught an error trying to send batch: ' + res);
+            reject(res);
+        });
+        this.batch[retries] = {
+          topic: this.retryTopics[retries],
+          messages: [],
+        };
+      }
+      else resolve(true);
+    });
+  }
 
-  setRetryTopics(topicsArr: string[], timeout: number[]) {
+  //User is ability to set the timeout and batchLimit
+  setRetryTopics(topicsArr: string[], options?: {timeout?: number[], batchLimit: number[]}) {
     this.retryTopics = topicsArr;
-    if(timeout) this.timeout = timeout;
-    else {
-      this.timeout = (new Array(topicsArr.length)).fill(1);
-    }
+    if(options && options.timeout) this.timeout = options.timeout;
+    else this.timeout = (new Array(topicsArr.length)).fill(0);
+    
+    if(options && options.batchLimit) this.batchLimit = options.batchLimit;
+    else this.batchLimit = (new Array(topicsArr.length)).fill(1);
+
+    this.retryTopics.forEach((topic) => {
+      const emptyMsg = {
+        topic,
+        messages: [],
+      };
+      this.batch.push(emptyMsg);
+    });
   }
 }
 
