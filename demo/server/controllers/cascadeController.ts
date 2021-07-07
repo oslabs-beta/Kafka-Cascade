@@ -1,4 +1,4 @@
-const { Kafka } = require('kafkajs');
+ const { Kafka } = require('kafkajs');
 const cascade = require('../../../kafka-cascade/index.ts');
 import * as Cascade from '../../../kafka-cascade/index';
 

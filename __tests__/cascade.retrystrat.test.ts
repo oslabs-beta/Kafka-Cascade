@@ -1,13 +1,13 @@
 const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
-import { TestKafka } from './cascade.mockclient.test';
+import { TestKafka, TestProducer } from './cascade.mockclient.test';
 
-// const log = console.log;
-// console.log = (test, ...args) => test === 'test' && log(args); 
-console.log = jest.fn();
+const log = console.log;
+console.log = (test, ...args) => test === 'test' && log(args); 
+// console.log = jest.fn();
 process.env.test = 'test';
 
-describe('Basic service tests', () => {
+describe('Testing timeout retry strategy', () => {
   let kafka: TestKafka;
   let testService: any;
 
@@ -15,12 +15,7 @@ describe('Basic service tests', () => {
     kafka = new TestKafka();
   });
 
-  it('Can create an empty service object', async () => {
-    testService = await cascade.service(kafka, 'test-topic', 'test-group', jest.fn(), jest.fn(), jest.fn());
-    expect(testService.retries).toBe(0);
-  });
-
-  it('All messages end up in DLQ when service is always fail', async () => {
+  it('Always fail on the sendTimeout route', async () => {
     const serviceAction = (msg: Types.KafkaConsumerMessageInterface, resolve: any, reject: any) => {
       try {
         reject(msg);
@@ -33,8 +28,8 @@ describe('Basic service tests', () => {
     const dlq = jest.fn();
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
-    const retryLevels = 5;
-    await testService.setRetryLevels(retryLevels);
+    const retryLevels = 2;
+    await testService.setRetryLevels(retryLevels, { timeout:(new Array(retryLevels).fill(1)) } );
     await testService.connect();
     await testService.run();
 
@@ -60,31 +55,42 @@ describe('Basic service tests', () => {
       expect(testServiceOffsets[topic].count).toBe(messageCount);
     }
     expect(dlq).toHaveBeenCalledTimes(messageCount);//dlq should be the same as the messagecount
-  });
+  })
+});
 
-  it('All messages succeed when retries is 1', async () => {
+describe('Testing batching retry strategy', () => {
+  let kafka: TestKafka;
+  let testService: any;
+  let producer: TestProducer;
+  let messageCount: number;
+  let retryLevels: number;
+  let dlq: any
+
+  beforeAll(async () => {
+    kafka = new TestKafka();
+
     const serviceAction = (msg: Types.KafkaConsumerMessageInterface, resolve: any, reject: any) => {
-      //set it to succeed after 1 retry
-      const { retries, status } = JSON.parse(msg.message.headers.cascadeMetadata);
-      if(retries === 1) {
-        // status = 'success';
-        resolve(msg);
+      try {
+        reject(msg);
       }
-      else reject(msg);
+      catch(error) {
+        console.log('Caught error in service CB: ' + error);
+      }
     }
+    //used to ask how dlq was used
+    dlq = jest.fn();
 
-    const success = jest.fn();
-    const dlq = jest.fn();
-
-    testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, success, dlq);
-    const retryLevels = 5;
-    await testService.setRetryLevels(retryLevels);
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
+    retryLevels = 2;
+    messageCount = 10;
+    await testService.setRetryLevels(retryLevels, { batchLimit:(new Array(retryLevels).fill(messageCount)) } );
     await testService.connect();
     await testService.run();
 
-    const producer = kafka.producer();
-    const messageCount = 10;
-    for(let i = 0; i < messageCount; i++) {
+    producer = kafka.producer();
+    //mimics sending message for the producer
+    //sending 1 less than the total messageCount
+    for(let i = 0; i < messageCount - 1; i++) {
       await producer.send({
         topic: 'test-topic',
         messages: [{
@@ -92,12 +98,23 @@ describe('Basic service tests', () => {
         }],
       });
     }
-
-    expect(producer.offsets['test-topic'].count).toBe(messageCount);
-    const testServerOffsets = testService.producer.producer.offsets;
-    expect(Object.keys(testServerOffsets)).toHaveLength(1);
-    expect(testServerOffsets['test-topic-cascade-retry-1'].count).toBe(messageCount);
-    expect(success).toHaveBeenCalledTimes(messageCount);
-    expect(dlq).toHaveBeenCalledTimes(0);
   });
+
+  it('MessageCount is not change before the number of messages equals to batch number', () => {
+    expect(producer.offsets['test-topic'].count).toBe(0);
+    expect(testService.producer.batch[0].messages).toHaveLength(messageCount - 1);
+    expect(dlq).not.toHaveBeenCalled();
+  });
+  
+  it('MessageCount is incremented when the number of messages equals to batch number', async () => {
+    await producer.send({
+      topic: 'test-topic',
+      messages: [{
+        value: 'test message',
+      }],
+    });
+    expect(producer.offsets['test-topic'].count).toBe(messageCount);
+    expect(dlq).toHaveBeenCalledTimes(messageCount);
+  });
+  
 });
