@@ -158,4 +158,29 @@ describe('Basic service tests', () => {
     expect(dlqCB).toHaveBeenCalledTimes(1);
     expect(retryCallback).toHaveBeenCalledTimes(5);  
   });
+
+  it('Fires a serviceError if the service CB throws', async () => {
+    const retryLevels = 1;
+    const messageCount = 1;
+    const service = (msg, resolve, reject) => { throw 'test error' };
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', service, jest.fn(), jest.fn());
+    const callbackTest = jest.fn();
+    testService.on('serviceError', callbackTest);
+
+    await testService.setRetryLevels(retryLevels);
+    await testService.connect();
+    await testService.run();
+
+    const producer = kafka.producer();
+    for(let i = 0; i < messageCount; i++) {
+      await producer.send({
+        topic: 'test-topic',
+        messages: [{
+          value: 'test message',
+        }],
+      });
+    }
+
+    expect(callbackTest).toHaveBeenCalled();
+  });
 });
