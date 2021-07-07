@@ -41,4 +41,9 @@ describe('Cascade Metadata', () => {
     expect(cascade.getMetadata).toHaveBeenCalled();
     expect(cascade.getMetadata).toHaveReturnedWith({status:'', retries:0, topicArr:[]});
   });
+
+  it('Returns undefined on bad data', () => {
+    const metadata = cascade.getMetadata({topic:'test-topic', offset:-1, partition:-1, 'message':{value:'test'}});
+    expect(metadata).toBeUndefined();
+  });
 });

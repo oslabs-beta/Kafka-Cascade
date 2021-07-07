@@ -160,7 +160,7 @@ class CascadeProducer extends EventEmitter {
   }
 
   //User is ability to set the timeout and batchLimit
-  setRetryTopics(topicsArr: string[], options?: {timeoutLimit?: number[], batchLimit: number[]}) {
+  setRetryTopics(topicsArr: string[], options?: {timeoutLimit?: number[], batchLimit?: number[]}) {
     this.retryTopics = topicsArr;
     if(options && options.timeoutLimit) this.timeout = options.timeoutLimit;
     else this.timeout = (new Array(topicsArr.length)).fill(0);

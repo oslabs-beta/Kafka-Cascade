@@ -18,7 +18,10 @@ module.exports = {
       }
     });
   },
-  getMetadata: (msg: Types.KafkaConsumerMessageInterface) => JSON.parse(msg.message.headers.cascadeMetadata),
+  getMetadata: (msg: Types.KafkaConsumerMessageInterface):{ retires:number, status:string, topicArr:string[] } => {
+    if(typeof(msg) !== 'object' || !msg.message || !msg.message.headers || !msg.message.headers.cascadeMetadata) return;
+    return JSON.parse(msg.message.headers.cascadeMetadata);
+  },
 };
 
 export {
