@@ -20,12 +20,12 @@ const socket = {
           conn.send(
             JSON.stringify({
               type: "error",
-              data: { error: "Unknown message type" },
+              payload: { error: "Unknown message type" },
             })
           );
         else
           dispatcher(
-            msg.data,
+            msg.payload,
             { conn, locals: {} },
             ...routes[routeIndex].stops
           );
@@ -49,13 +49,13 @@ const socket = {
     })
     .listen(4000),
 
-  use: (...stops) => {
-    routes.push({ start: stops[0], stops: stops.slice(1) });
+  use: (start:string, ...stops) => {
+    routes.push({ start, stops });
   },
 
   send: (type:string, payload:any) => {
     socket.server.connections.forEach(conn => {
-      conn.send({type, payload: JSON.stringify(payload)});
+      conn.send(JSON.stringify({type, payload: payload}));
     });
   }
 };
@@ -80,7 +80,7 @@ const dispatcher = (req, res, ...route) => {
   if (route[0])
     route[0](req, res, (error) => {
       if (error) {
-        res.conn.send(JSON.stringify({ type: "error", data: { error } }));
+        res.conn.send(JSON.stringify({ type: "error", payload: { error } }));
       } else {
         dispatcher(req, res, ...route.slice(1));
       }

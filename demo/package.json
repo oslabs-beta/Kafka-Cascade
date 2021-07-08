@@ -4,9 +4,10 @@
   "description": "DLQ handling for KafkaJS_DEMO",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "dev": "webpack serve"
+    "demo": "npm start & npm run kafka",
+    "start": "NODE_ENV=production; webpack & ts-node server/server.ts",
+    "dev": "NODE_ENV=production; webpack-dev-server --open & tsc --watch --project . --outDir ./dist --onSuccess \"nodemon ./dist/server.js\"",
+    "kafka": "docker-compose up"
   },
   "keywords": [
     "Kafka",
@@ -20,11 +21,17 @@
     "url": "https://github.com/oslabs-beta/Kafka-Cascade"
   },
   "dependencies": {
+    "@material-ui/core": "^4.12.1",
     "@types/react": "^17.0.11",
     "@types/react-dom": "^17.0.8",
+    "chart.js": "^3.4.1",
+    "d3-scale-chromatic": "^3.0.0",
+    "kafkajs": "^1.15.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "typescript": "^4.3.4"
+    "react-router": "^5.2.0",
+    "typescript": "^4.3.4",
+    "webpack-cli": "^4.7.2"
   },
   "devDependencies": {
     "css-loader": "^5.2.6",
@@ -34,8 +41,13 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.0.0",
     "ts-loader": "^9.2.3",
+    "ts-node": "^10.0.0",
     "webpack": "^5.41.0",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "express": "^4.17.1",
+    "jest": "^27.0.6",
+    "nodejs-websocket": "^1.7.2",
+    "nodemon": "^2.0.7"
   }
 }

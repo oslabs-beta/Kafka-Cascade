@@ -97,7 +97,7 @@ class CascadeService extends EventEmitter {
     });  
   }
 
-  setRetryLevels(count: number, options?: {timeoutLimit?: number[], batchLimit: number[]}): Promise<any> {
+  setRetryLevels(count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}): Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
         if(this.topicsArr.length > count){

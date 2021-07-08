@@ -4,16 +4,17 @@ class Socket {
   socket:WebSocket;
   connected:boolean;
   nextId:number;
-  listeners: { id:number, callback:(type:string, payload:any, id:number) => void}[];
+  listeners: {[details: string] : { id:number, callback:(payload:any, id:number) => void}[]};
   connect: () => Promise<any>;
 
   constructor() {
     this.connect = () => {
-      this.socket = new WebSocket(wsURL);          
-
+      this.socket = new WebSocket(wsURL);  
+      
       this.socket.onmessage = (e) => {
+        // console.log('Received message: ', e);
         const msg = JSON.parse(e.data);
-        this.listeners.forEach(l => l.callback(msg.type, msg.data, l.id));
+        this.listeners[msg.type].forEach(l => l.callback(msg.payload, l.id));
       }
 
       return new Promise((resolve, reject) => {
@@ -24,22 +25,23 @@ class Socket {
       });
     }
 
-    this.listeners = [];
+    this.listeners = {};
     this.nextId = 0;
     this.connected = false;
   }
 
-  addListener(callback) {
-    this.listeners.push({ id:this.nextId, callback});
+  addListener(type:string, callback: (payload:any, id:number) => void) {
+    if(!this.listeners[type]) this.listeners[type] = [];
+    this.listeners[type].push({ id:this.nextId, callback});
     return this.nextId++;
   }
 
-  removeListener(id) {
-    this.listeners = this.listeners.filter(l => l.id !== id);
+  removeListener(id: number) {
+    // this.listeners = this.listeners.filter(l => l.id !== id);
   }
 
-  sendEvent(type, data) {
-    this.socket.send(JSON.stringify({type, data}));
+  sendEvent(type: string, payload:any = {}) {
+    this.socket.send(JSON.stringify({type, payload}));
   }
 }
 
