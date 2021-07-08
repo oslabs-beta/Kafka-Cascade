@@ -1,5 +1,6 @@
-import React, { FC, useState} from 'react';
+import React, { FC, useState } from 'react';
 import Slider from '@material-ui/core/Slider';
+import Typography from '@material-ui/core/Typography';
 
 function valuetext(value: number) {
   return `${value}`;
@@ -15,16 +16,22 @@ export const MessageSlider: FC<any> = (props:any) => {
 
   return(
     // <input type='range' min='1' max='30' value={messagesPerSecond} className='slider' onChange={numMessagesHandler}/>
-    <Slider 
-      value={1}
-      getAriaValueText={valuetext}
-      aria-labelledby="discrete-slider"
-      valueLabelDisplay="auto"
-      step={1}
-      marks
-      min={1}
-      max={100}
-      onChange={setMessagesPerSecondHandler}
-    />
+    <div>
+      <Typography id="discrete-slider" gutterBottom>
+        Messages per Second
+      </Typography>
+      <Slider 
+        // defaultValue={1}
+        value={messagesPerSecond}
+        getAriaValueText={valuetext}
+        aria-labelledby="discrete-slider"
+        valueLabelDisplay="auto"
+        step={1}
+        marks
+        min={1}
+        max={10}
+        onChange={setMessagesPerSecondHandler}
+      />
+    </div>
   )
 }

@@ -7,7 +7,7 @@
     "demo": "npm start & npm run kafka",
     "start": "NODE_ENV=production; webpack & ts-node server/server.ts",
     "dev": "NODE_ENV=production; webpack-dev-server --open & tsc --watch --project . --outDir ./dist --onSuccess \"nodemon ./dist/server.js\"",
-    "kakfa": "docker-compose up"
+    "kafka": "docker-compose up"
   },
   "keywords": [
     "Kafka",

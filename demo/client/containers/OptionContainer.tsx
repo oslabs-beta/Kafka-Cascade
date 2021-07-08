@@ -6,7 +6,7 @@ import socket from '../socket';;
 
 export const OptionContainer: FC<any> = (props:any) => {
   const [numberOfRetries, setNumberOfRetries] = useState<any>(5)
-  const [retryTypes, setRetryTypes] = useState<any>({
+  const [retryType, setRetryType] = useState<any>({
     fastRetry: true,
     timeout: false,
     batching: false,
@@ -14,21 +14,19 @@ export const OptionContainer: FC<any> = (props:any) => {
   const [messagesPerSecond, setMessagesPerSecond] = useState<any>(1);
 
   const startHandler = () => {
-    //checking option
-    // let type = retryTypes.fastRetry ? {} : retryTypes.timeout ? 
-    //   {timeout: [2000, 4000, 8000, 16000, 32000]} : {batching: 5};
-
-    // socket.sendEvent('start', {retries: numberOfRetries, type})
-    
-    
+    let type: any;
+    if(retryType.fastRetry) type = {};
+    else if(retryType.timeout) type = {timeout: [1000, 2000, 4000, 8000, 16000, 32000]};
+    else type = {batch: 6}
+    socket.sendEvent('start', {retries: numberOfRetries, type});
   }
 
   const endHandler = () => {
-
+    socket.sendEvent('stop', {});
   }
 
-  const setMessagesPerSecondHandler = (event: any) => {
-    console.log(event.target.value);
+  const setMessagesPerSecondHandler = (event: any, value: number) => {
+    setMessagesPerSecond(value);
   }
 
 
@@ -37,7 +35,7 @@ export const OptionContainer: FC<any> = (props:any) => {
       <div className='buttonsContainer'>
         <button className='startButton' onClick={startHandler}>Start</button>
         <button className='endButton' onClick={endHandler}>End</button>
-        <RadioButtonGroup retryTypes={retryTypes} setRetryTypes={setRetryTypes}/>
+        <RadioButtonGroup retryType={retryType} setRetryType={setRetryType}/>
       </div>
       <div className='messageSliderContainer'>
         <MessageSlider messagesPerSecond={messagesPerSecond} setMessagesPerSecondHandler={setMessagesPerSecondHandler}/>

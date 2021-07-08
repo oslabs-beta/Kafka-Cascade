@@ -18,11 +18,13 @@ export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
   useEffect(() => {
     const colorRangeInfo = {
       colorStart: 0,
-      colorEnd: 1,
-      useEndAsStart: false,
+      colorEnd: 0.9,
+      useEndAsStart: true,
     }; 
 
-    const colors = interpolateColors(7, Scales.interpolateCool, colorRangeInfo);
+    // scale options: https://github.com/d3/d3-scale-chromatic
+    const colorScale = Scales.interpolateInferno;
+    let colors:any;
 
     const config = {
       type: 'bar',
@@ -36,10 +38,13 @@ export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
         scales: {
           y: {
             beginAtZero: true,
+            grid: {
+              display: false,
+            }
           },
           x: {
-            ticks: {
-              color: 'rgb(1,1,1)',
+            grid: {
+              display: false,
             }
           }
         },
@@ -56,12 +61,20 @@ export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
       }
     }
 
-    config.data.labels = ['Initial Success', '1 Retry', '2 Retry', '3 Retry', '4 Retry', '5 Retry', 'DLQ']; 
-    config.data.datasets[0].data = [10,20,40,100,60,40,15];
+    // config.data.labels = ['Initial Success', '1st Retry', '2nd Retry', '3rd Retry', '4th Retry', '5th Retry', 'DLQ']; 
+    // config.data.datasets[0].data = [10,20,40,100,60,40,15];
+
     const chart = new Chart((document.getElementById('chartId') as HTMLCanvasElement), config as ChartConfiguration);
     socket.addListener('heartbeat', (payload:any) => {
-      config.data.labels = payload.topics;
       config.data.datasets[0].data = payload.levelCounts;
+
+      if(config.data.labels.length !== payload.levelCounts.length) {
+        colors = interpolateColors(payload.levelCounts.length, colorScale, colorRangeInfo);
+        config.data.datasets[0].backgroundColor = colors;
+        config.data.datasets[0].borderColor = colors;
+        config.data.labels = buildLabels(payload.levelCounts.length);
+      }
+
       chart.update();
     });
   });
@@ -91,4 +104,17 @@ function calculatePoint(i:number, intervalSize:number, colorRangeInfo: {colorSta
   return (useEndAsStart
     ? (colorEnd - (i * intervalSize))
     : (colorStart + (i * intervalSize)));
+}
+
+function buildLabels(count:number) {
+  const labels = new Array(count);
+  labels[0] = 'Initial Success';
+  labels[count-1] = 'DLQ';
+  for(let i = 1; i < count - 1; i++) {
+    if(i === 1) labels[i] = '1st Retry';
+    else if(i === 2) labels[i] = '2nd Retry';
+    else if(i === 3) labels[i] = '3rd Retry';
+    else labels[i] = i + 'th Retry';
+  }
+  return labels;
 }

@@ -24,11 +24,15 @@ interface RadioButtonGroupState {
 // socket.sendEvent('start', {})
 
 export const RadioButtonGroup: FC<any> = (props:any) => {
-
-  const {retryType, setRetryType} = props;
+  const [retryType, setRetryType] = React.useState<object>({
+    fastRetry: true,
+    timeout: false,
+    batching: false,
+  });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 
+    // setRetryType((event.target as HTMLInputElement).value);
     let newRetryType = {...retryType};
     newRetryType = {
       fastRetry: false,
@@ -39,19 +43,13 @@ export const RadioButtonGroup: FC<any> = (props:any) => {
     setRetryType(newRetryType);
   };
 
-  let buttonValue = '';
-
-  for (const key in retryType) {
-    if (retryType[key]) buttonValue = key;
-  }
-
   return(
     <FormControl component="fieldset">
       <FormLabel component="legend">Retry Strategy</FormLabel>
       <RadioGroup
         aria-label="Retry Strategy"
         name="retryStrategy"
-        value={buttonValue}
+        value={retryType}
         onChange={handleChange}
       >
         <FormControlLabel

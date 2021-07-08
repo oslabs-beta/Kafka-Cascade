@@ -55,7 +55,7 @@ const socket = {
 
   send: (type:string, payload:any) => {
     socket.server.connections.forEach(conn => {
-      conn.send({type, payload: JSON.stringify(payload)});
+      conn.send(JSON.stringify({type, payload: payload}));
     });
   }
 };

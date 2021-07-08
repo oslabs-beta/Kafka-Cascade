@@ -9,10 +9,10 @@ class Socket {
 
   constructor() {
     this.connect = () => {
-      this.socket = new WebSocket(wsURL);          
-
+      this.socket = new WebSocket(wsURL);  
+      
       this.socket.onmessage = (e) => {
-        console.log('Received message: ', e);
+        // console.log('Received message: ', e);
         const msg = JSON.parse(e.data);
         this.listeners[msg.type].forEach(l => l.callback(msg.payload, l.id));
       }
