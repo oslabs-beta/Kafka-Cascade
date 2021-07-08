@@ -4,6 +4,8 @@ import socket from '../socket';
 import { ChartConfiguration } from 'chart.js/types/index.esm';
 import * as Scales from 'd3-scale-chromatic';
 
+import './CascadeChart.scss';
+
 interface ChartProps {
   
 }
@@ -61,9 +63,6 @@ export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
       }
     }
 
-    // config.data.labels = ['Initial Success', '1st Retry', '2nd Retry', '3rd Retry', '4th Retry', '5th Retry', 'DLQ']; 
-    // config.data.datasets[0].data = [10,20,40,100,60,40,15];
-
     const chart = new Chart((document.getElementById('chartId') as HTMLCanvasElement), config as ChartConfiguration);
     socket.addListener('heartbeat', (payload:any) => {
       config.data.datasets[0].data = payload.levelCounts;
@@ -80,7 +79,7 @@ export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
   });
 
   return (
-    <div>
+    <div className='cascadeChart'>
       <canvas id="chartId"></canvas>
     </div>
   );

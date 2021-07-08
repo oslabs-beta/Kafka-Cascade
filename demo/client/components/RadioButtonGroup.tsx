@@ -46,30 +46,32 @@ export const RadioButtonGroup: FC<any> = (props:any) => {
   }
 
   return(
-    <FormControl component="fieldset">
-      <FormLabel component="legend">Retry Strategy</FormLabel>
-      <RadioGroup
-        aria-label="Retry Strategy"
-        name="retryStrategy"
-        value={buttonValue}
-        onChange={handleChange}
-      >
-        <FormControlLabel
-          value="fastRetry"
-          control={<Radio />}
-          label="Fast Retry" />
-        <FormControlLabel
-          value="timeout"
-          control={<Radio />}
-          label="Timeout"
-        />
-        <FormControlLabel
-          value="batching"
-          control={<Radio />}
-          label="Batching"
-        />
-      </RadioGroup>
-    </FormControl>
+    <div className='radioGroup'>
+      <FormControl component="fieldset">
+        <FormLabel component="legend">Retry Strategy</FormLabel>
+        <RadioGroup
+          aria-label="Retry Strategy"
+          name="retryStrategy"
+          value={buttonValue}
+          onChange={handleChange}
+        >
+          <FormControlLabel
+            value="fastRetry"
+            control={<Radio />}
+            label="Fast Retry" />
+          <FormControlLabel
+            value="timeout"
+            control={<Radio />}
+            label="Timeout"
+          />
+          <FormControlLabel
+            value="batching"
+            control={<Radio />}
+            label="Batching"
+          />
+        </RadioGroup>
+      </FormControl>
+    </div>
   );
 
 }
