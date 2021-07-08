@@ -15,7 +15,6 @@ export const MessageSlider: FC<any> = (props:any) => {
   // }
 
   return(
-    // <input type='range' min='1' max='30' value={messagesPerSecond} className='slider' onChange={numMessagesHandler}/>
     <div>
       <Typography id="discrete-slider" gutterBottom>
         Messages per Second
