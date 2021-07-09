@@ -1,12 +1,13 @@
 const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
+import Queue from './util/queue';
 
 class CascadeProducer extends EventEmitter {
   producer: Types.ProducerInterface;
   dlqCB: Types.RouteCallback;
   retryTopics: string[];
   paused: boolean;
-  pausedQueue: Types.KafkaConsumerMessageInterface[]; // maybe linked list
+  pausedQueue: Queue<Types.KafkaConsumerMessageInterface>;
   retryOptions: {timeout?: number[], batchLimit: number};
   timeout: number[] = [];
   batch: Types.KafkaProducerMessageInterface[] = [];
@@ -20,7 +21,7 @@ class CascadeProducer extends EventEmitter {
     this.retryTopics = [];
     this.producer = kafka.producer();
     this.paused = false;
-    this.pausedQueue = [];
+    this.pausedQueue = new Queue<Types.KafkaConsumerMessageInterface>();
   }
 
   connect(): Promise<any> {
