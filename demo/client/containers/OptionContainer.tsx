@@ -1,6 +1,6 @@
 import React, {FC, useState} from 'react';
 import { RadioButtonGroup } from '../components/RadioButtonGroup';
-import { MessageSlider } from '../components/messageSlider';
+import { MessageSlider } from '../components/MessageSlider';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import socket from '../socket';

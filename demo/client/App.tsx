@@ -3,7 +3,7 @@ import { OptionContainer } from './containers/OptionContainer';
 import { CascadeChart } from './components/CascadeChart';
 import socket from './socket';
 
-import './app.scss';
+import './App.scss';
 
 interface AppProps {
   
