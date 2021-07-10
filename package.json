@@ -2,7 +2,7 @@
   "name": "kafka-cascade",
   "version": "0.0.11",
   "description": "DLQ handling for KafkaJS",
-  "main": ".dist/index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "start": "",
     "build": "tsc",
