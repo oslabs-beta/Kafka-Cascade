@@ -61,7 +61,7 @@ describe('Basic service tests', () => {
     const callbackTest = jest.fn();
     testService.on('stop', callbackTest);
 
-    await testService.setRetryLevels(retryLevels, { batchLimit:(new Array(2)).fill(messageCount) } );
+    await testService.setDefaultRoute(retryLevels, { batchLimit:(new Array(2)).fill(messageCount) } );
     await testService.connect();
     await testService.run();
 
@@ -82,8 +82,8 @@ describe('Basic service tests', () => {
     }
 
     expect(callbackTest).toHaveBeenCalled();
-    testService.producer.batch.forEach(batch => {
-      expect(batch.messages).toHaveLength(0);
+    testService.producer.routes[0].levels.forEach(level => {
+      expect(level.messages).toHaveLength(0);
     });
     const testServiceOffsets = testService.producer.producer.offsets;
     expect(Object.keys(testServiceOffsets)).toHaveLength(0);
@@ -128,7 +128,7 @@ describe('Basic service tests', () => {
     const dlqCB = jest.fn();
     testService.on('dlq', dlqCB);
 
-    await testService.setRetryLevels(3);
+    await testService.setDefaultRoute(3);
     await testService.connect();
     await testService.run();
 
@@ -167,7 +167,7 @@ describe('Basic service tests', () => {
     const callbackTest = jest.fn();
     testService.on('serviceError', callbackTest);
 
-    await testService.setRetryLevels(retryLevels);
+    await testService.setDefaultRoute(retryLevels);
     await testService.connect();
     await testService.run();
 

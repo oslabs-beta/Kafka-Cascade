@@ -6,7 +6,7 @@ import * as Types from './src/kafkaInterface';
 module.exports = {
   service: (kafka: Types.KafkaInterface, topic: string, groupId: string,
     serviceCB: Types.ServiceCallback, successCB: Types.RouteCallback,
-    dlqCB: Types.RouteCallback = (msg: Types.KafkaConsumerMessageInterface) => console.log('DQL Message received')): Promise<CascadeService> => {
+    dlqCB: Types.RouteCallback = (msg: Types.KafkaConsumerMessageInterface) => console.log('DLQ Message received')): Promise<CascadeService> => {
     
     return new Promise(async (resolve, reject) => {
       try {
@@ -30,4 +30,3 @@ export {
   CascadeConsumer,
   Types,
 };
-

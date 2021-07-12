@@ -4,24 +4,27 @@ import Queue from './util/queue';
 
 class CascadeProducer extends EventEmitter {
   producer: Types.ProducerInterface;
+  admin: Types.AdminInterface;
+  topic: string;
   dlqCB: Types.RouteCallback;
   retryTopics: string[];
   paused: boolean;
-  pausedQueue: Queue<Types.KafkaConsumerMessageInterface>;
-  retryOptions: {timeout?: number[], batchLimit: number};
-  timeout: number[] = [];
-  batch: Types.KafkaProducerMessageInterface[] = [];
-  batchLimit: number[] = [];
+  pausedQueue: Queue<{msg:Types.KafkaConsumerMessageInterface, status:string}>;
   sendStorage = {};
+  routes: Types.ProducerRoute[];
 
   // pass in kafka interface
-  constructor(kafka: Types.KafkaInterface, dlqCB: Types.RouteCallback) {
+  constructor(kafka: Types.KafkaInterface, topic:string, dlqCB: Types.RouteCallback) {
     super();
+    this.topic = topic;
     this.dlqCB = dlqCB;
     this.retryTopics = [];
     this.producer = kafka.producer();
+    this.admin = kafka.admin();
     this.paused = false;
-    this.pausedQueue = new Queue<Types.KafkaConsumerMessageInterface>();
+    this.pausedQueue = new Queue<{msg:Types.KafkaConsumerMessageInterface, status:string}>();
+    // set the routes to have a default route
+    this.routes = [{status:'', retryLevels:0, timeoutLimit: [], batchLimit: [], levels: [], topics:[]}];
   }
 
   connect(): Promise<any> {
@@ -42,7 +45,8 @@ class CascadeProducer extends EventEmitter {
     const resumePromises = [];
     while(this.pausedQueue.length) {
       // push promise into promise array
-      resumePromises.push(this.send(this.pausedQueue.shift()));
+      const {msg, status} = this.pausedQueue.shift();
+      resumePromises.push(this.send(msg, status));
     }
     // return promise array
     return Promise.all(resumePromises);
@@ -56,36 +60,49 @@ class CascadeProducer extends EventEmitter {
       this.dlqCB(msg);
     }
     
-    this.batch.forEach((batch, i) => {
-      batch.messages.forEach(msg => {
-        const conMsg = {
-          topic: this.topic,
-          partition: -1,
-          offset: -1,
-          message: msg,
-        }
-        this.dlqCB(conMsg);
+    this.routes.forEach(route => {
+      route.levels.forEach((level, i) => {
+        level.messages.forEach(msg => {
+          const conMsg = {
+            topic: route.levels[i].topic,
+            partition: -1,
+            offset: -1,
+            message: msg,
+          }
+          this.dlqCB(conMsg);
+        });
+        level.messages = [];
       });
-      this.batch[i] = {
-        topic: this.retryTopics[i],
-        messages: [],
-      };
     });
     
     return new Promise((resolve) => resolve(true));
   }
 
-  send(msg: Types.KafkaConsumerMessageInterface): Promise<any> {
+  send(msg: Types.KafkaConsumerMessageInterface, status:string): Promise<any> {
     try{
       if(this.paused) {
-        this.pausedQueue.push(msg);
+        this.pausedQueue.push({msg, status});
         return new Promise(resolve => resolve(true));
       }
-      // access cascadeMetadata - only first message for now, refactor later
+
+      let route = this.routes[0];
+      for(let i = 1; i < this.routes.length; i++) {
+        if(status === this.routes[i].status) {
+          route = this.routes[i];
+          break;
+        }
+      }
+
       const metadata = JSON.parse(msg.message.headers.cascadeMetadata);
+      if(metadata.status !== status) {
+        metadata.retries = 0;
+        metadata.status = status;
+      }
+
       // check if retries exceeds allowed number of retries
-      if (metadata.retries < this.retryTopics.length) {
-        msg.topic = this.retryTopics[metadata.retries];
+      if (metadata.retries < route.topics.length) {
+
+        msg.topic = route.topics[metadata.retries];
         metadata.retries += 1;
         // populate producerMessage object
         let id = `${Date.now()}${Math.floor(Math.random() * Date.now())}`;
@@ -98,8 +115,8 @@ class CascadeProducer extends EventEmitter {
           }]
         };
         
-        if(this.timeout[metadata.retries - 1] > 0) return this.sendTimeout(id, producerMessage, metadata.retries - 1); 
-        else return this.sendBatch(producerMessage, metadata.retries - 1);
+        if(route.timeoutLimit[metadata.retries - 1] > 0) return this.sendTimeout(id, producerMessage, metadata.retries - 1, route); 
+        else return this.sendBatch(producerMessage, metadata.retries - 1, route);
       } else {
         this.emit('dlq', msg);
         this.dlqCB(msg);
@@ -113,7 +130,7 @@ class CascadeProducer extends EventEmitter {
   
   //Used by send
   //sets delay for producer messages
-  sendTimeout(id, msg, retries) {
+  sendTimeout(id:string, msg: Types.KafkaProducerMessageInterface, retries:number, route: Types.ProducerRoute) {
     return new Promise((resolve, reject) => {
       //stores each send and msg to sendStorage[id] 
       this.sendStorage[id] = {
@@ -134,47 +151,135 @@ class CascadeProducer extends EventEmitter {
         }
       }
       if(process.env.test === 'test') scheduler();
-      else setTimeout(scheduler, this.timeout[retries]);
+      else setTimeout(scheduler, route.timeoutLimit[retries]);
     });
   };
 
   //Used by send
   //sets batch processing
-  sendBatch(msg, retries){
+  sendBatch(msg:Types.KafkaProducerMessageInterface, retries:number, route:Types.ProducerRoute){
     return new Promise((resolve, reject) => {
-      this.batch[retries].messages.push(msg.messages[0]);
-      if(this.batch[retries].messages.length === this.batchLimit[retries]) {
-        this.emit('retry', this.batch[retries]);
-        this.producer.send(this.batch[retries])
+      route.levels[retries].messages.push(msg.messages[0]);
+      if(route.levels[retries].messages.length === route.batchLimit[retries]) {
+        this.emit('retry', route.levels[retries]);
+        this.producer.send(route.levels[retries])
           .then(res => resolve(res))
           .catch(res => {
             console.log('Caught an error trying to send batch: ' + res);
             reject(res);
         });
-        this.batch[retries] = {
-          topic: this.retryTopics[retries],
-          messages: [],
-        };
+        route.levels[retries].messages = [];
       }
       else resolve(true);
     });
   }
 
   //User is ability to set the timeout and batchLimit
-  setRetryTopics(topicsArr: string[], options?: {timeoutLimit?: number[], batchLimit?: number[]}) {
-    this.retryTopics = topicsArr;
-    if(options && options.timeoutLimit) this.timeout = options.timeoutLimit;
-    else this.timeout = (new Array(topicsArr.length)).fill(0);
-    
-    if(options && options.batchLimit) this.batchLimit = options.batchLimit;
-    else this.batchLimit = (new Array(topicsArr.length)).fill(1);
+  setDefaultRoute(count:number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const defaultRoute = this.routes[0];
+        if(defaultRoute.topics.length > count){
+          const diff = this.topicsArr.length - count;
+          for(let i = 0; i < diff; i++){
+            defaultRoute.topics.pop();
+          };
+        }
+        else {
+          for(let i = defaultRoute.topics.length; i < count; i++){
+            defaultRoute.topics.push(this.topic + '-cascade-retry-' + (i+1));
+          }
+        }
+        defaultRoute.retryLevels = count;
 
-    this.retryTopics.forEach((topic) => {
-      const emptyMsg = {
-        topic,
-        messages: [],
-      };
-      this.batch.push(emptyMsg);
+        if(options && options.timeoutLimit) defaultRoute.timeoutLimit = options.timeoutLimit;
+        else defaultRoute.timeoutLimit = (new Array(defaultRoute.topics.length)).fill(0);
+        
+        if(options && options.batchLimit) defaultRoute.batchLimit = options.batchLimit;
+        else defaultRoute.batchLimit = (new Array(defaultRoute.topics.length)).fill(1);
+
+        defaultRoute.levels = [];
+        defaultRoute.topics.forEach((topic) => {
+          const emptyMsg = {
+            topic,
+            messages: [],
+          };
+          defaultRoute.levels.push(emptyMsg);
+        });
+        
+
+        // get an admin client to pre-register topics
+        await this.admin.connect();
+        const registerTopics = {
+          waitForLeaders: true,
+          topics: [],
+        }
+        defaultRoute.topics.forEach(topic => registerTopics.topics.push({topic}));
+
+        await this.admin.createTopics(registerTopics);
+        const re = new RegExp(`^${this.topic}-cascade-retry-.*`);
+        console.log('topics registered =', (await this.admin.listTopics()).filter(topic => topic === this.topic || topic.search(re) > -1));
+        await this.admin.disconnect();
+
+        setTimeout(() => {
+          console.log('Registered topics with Kafka...');
+          resolve(true);
+        }, 10);
+      }
+      catch(error) {
+        this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+        reject(error);
+      }
+    });
+  }
+
+  setRoute(status:string, count:number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const route:any = { status, retryLevels:count, topics:[] };
+        for(let i = 0; i < count; i++){
+          route.topics.push(this.topic + '-cascade-retry-' + 'route-' + status + '-' + (i+1));
+        }
+
+        if(options && options.timeoutLimit) route.timeoutLimit = options.timeoutLimit;
+        else route.timeoutLimit = (new Array(route.topics.length)).fill(0);
+        
+        if(options && options.batchLimit) route.batchLimit = options.batchLimit;
+        else route.batchLimit = (new Array(route.topics.length)).fill(1);
+
+        route.levels = [];
+        route.topics.forEach((topic) => {
+          const emptyMsg = {
+            topic,
+            messages: [],
+          };
+          route.levels.push(emptyMsg);
+        });
+        
+        this.routes.push(route);
+
+        // get an admin client to pre-register topics
+        await this.admin.connect();
+        const registerTopics = {
+          waitForLeaders: true,
+          topics: [],
+        }
+        route.topics.forEach(topic => registerTopics.topics.push({topic}));
+
+        await this.admin.createTopics(registerTopics);
+        const re = new RegExp(`^${this.topic}-cascade-retry-.*`);
+        console.log('topics registered =', (await this.admin.listTopics()).filter(topic => topic === this.topic || topic.search(re) > -1));
+        await this.admin.disconnect();
+
+        setTimeout(() => {
+          console.log('Registered topics with Kafka...');
+          resolve(true);
+        }, 10);
+      }
+      catch(error) {
+        this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+        reject(error);
+      }
     });
   }
 }

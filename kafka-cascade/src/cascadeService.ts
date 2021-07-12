@@ -2,9 +2,6 @@ const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 import CascadeProducer from './cascadeProducer';
 import CascadeConsumer from './cascadeConsumer';
-import { rejects } from 'assert/strict';
-import { resolve } from 'path/posix';
-import { emit } from 'process';
 
 // kafka object to create producer and consumer
 // service callback
@@ -22,11 +19,8 @@ class CascadeService extends EventEmitter {
   serviceCB: Types.ServiceCallback;
   successCB: Types.RouteCallback;
   dlqCB: Types.RouteCallback;
-  retries : number;
-  topicsArr : string[];
   producer: CascadeProducer;
   consumer: CascadeConsumer;
-  timeout: number;
 
   events = [ 
     'connect',
@@ -56,7 +50,7 @@ class CascadeService extends EventEmitter {
 
 
       // create producers and consumers
-      this.producer = new CascadeProducer(kafka, dlqCB);
+      this.producer = new CascadeProducer(kafka, topic, dlqCB);
       this.producer.on('retry', (msg) => this.emit('retry', msg));
       this.producer.on('dlq', (msg) => this.emit('dlq', msg));
       this.producer.on('error', (error) => this.emit('error', 'Error in cascade producer: ' + error));
@@ -71,12 +65,12 @@ class CascadeService extends EventEmitter {
       try {
         await this.producer.connect();
         await this.consumer.connect();
-        this.emit('connect');
         resolve(true);
+        this.emit('connect');
       }
       catch(error) {
-        this.emit('error', 'Error in cascade.connect(): ' + error);
         reject(error);
+        this.emit('error', 'Error in cascade.connect(): ' + error);
       }
     });  
   }
@@ -87,59 +81,42 @@ class CascadeService extends EventEmitter {
         await this.producer.stop();
         await this.producer.disconnect();
         await this.consumer.disconnect();
-        this.emit('disconnect');
         resolve(true);
+        this.emit('disconnect');
       }
       catch(error) {
-        this.emit('error', 'Error in cascade.disconnect(): ' + error);
         reject(error);
+        this.emit('error', 'Error in cascade.disconnect(): ' + error);
       }
     });  
   }
 
-  setRetryLevels(count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if(this.topicsArr.length > count){
-          const diff = this.topicsArr.length - count;
-          for(let i = 0; i < diff; i++){
-            this.topicsArr.pop();
-          };
-        }
-        else {
-          for(let i = this.retries; i < count; i++){
-            this.topicsArr.push(this.topic + '-cascade-retry-' + (i+1));
-          }
-        }
-
-        this.producer.setRetryTopics(this.topicsArr, options);
-        this.retries = count;
-        
-
-        // get an admin client to pre-register topics
-        const admin = this.kafka.admin();
-        await admin.connect();
-        const registerTopics = {
-          waitForLeaders: true,
-          topics: [],
-        }
-        this.topicsArr.forEach(topic => registerTopics.topics.push({topic}));
-
-        await admin.createTopics(registerTopics);
-        const re = new RegExp(`^${this.topic}-cascade-retry-.*`);
-        console.log('topics registered =', (await admin.listTopics()).filter(topic => topic === this.topic || topic.search(re) > -1));
-        await admin.disconnect();
-
-        setTimeout(() => {
-          console.log('Registered topics with Kafka...');
-          resolve(true);
-        }, 10);
-      }
-      catch(error) {
-        this.emit('error', 'Error in cascade.setRetryLevels(): ' + error);
-        reject(error);
-      }
+  setDefaultRoute(count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.producer.setDefaultRoute(count, options)
+        .then(res => resolve(res))
+        .catch(error => {
+          reject(error);
+          this.emit('error', error);
+        });
     });
+  }
+
+  setRoute(status:string, count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.producer.setRoute(status, count, options)
+        .then(res => resolve(res))
+        .catch(error => {
+          reject(error);
+          this.emit('error', error);
+        });
+    });
+  }
+
+  getKafkaTopics():string[] {
+    let topics:string[] = [];
+    this.producer.routes.forEach(route => topics = topics.concat(route.topics));
+    return topics;
   }
 
   run():Promise<any> {
@@ -147,19 +124,19 @@ class CascadeService extends EventEmitter {
       try {
         const status = await this.consumer.run(this.serviceCB, 
           (msg) => { this.emit('success', msg); this.successCB(msg) }, 
-          async (msg) => {
+          async (msg, status:string = '') => {
             try {
-              await this.producer.send(msg);
+              await this.producer.send(msg, status);
             }
             catch(error) {
               this.emit('error', 'Error in cascade producer.send(): ' + error);
             }
           });
-        this.emit('run');
         resolve(status);
+        this.emit('run');
       } catch(error) {
-        this.emit('error', 'Error in cascade.run(): ' + error);
         reject(error);
+        this.emit('error', 'Error in cascade.run(): ' + error);
       }
       
     });
@@ -171,11 +148,11 @@ class CascadeService extends EventEmitter {
         await this.consumer.stop();
         await this.producer.stop();
 
-        this.emit('stop');
         resolve(true);
+        this.emit('stop');
       } catch (error) {
-        this.emit('error', 'Error in cascade.stop(): ' + error);
         reject(error);
+        this.emit('error', 'Error in cascade.stop(): ' + error);
       }
 
     });
@@ -188,11 +165,11 @@ class CascadeService extends EventEmitter {
         try {
           await this.consumer.pause();
           this.producer.pause();
-          this.emit('pause');
           resolve(true);
+          this.emit('pause');
         } catch (error) {
-          this.emit('error', 'Error in cascade.pause(): ' + error);
           reject(error);
+          this.emit('error', 'Error in cascade.pause(): ' + error);
         }
       });
     } else {
@@ -212,11 +189,11 @@ class CascadeService extends EventEmitter {
         try{
           await this.consumer.resume();
           await this.producer.resume();
-          this.emit('resume');
           resolve(true);
+          this.emit('resume');
         } catch (error){
-          this.emit('error', 'Error in cascade.resume(): ' + error);
           reject(error);
+          this.emit('error', 'Error in cascade.resume(): ' + error);
         }
       });
     } else {

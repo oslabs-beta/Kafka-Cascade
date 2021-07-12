@@ -62,11 +62,19 @@ interface KafkaConsumerMessageInterface {
         };
     };
 }
+interface ProducerRoute {
+    status: string;
+    retryLevels: number;
+    timeoutLimit: number[];
+    batchLimit: number[];
+    levels: KafkaProducerMessageInterface[];
+    topics: string[];
+}
 interface CascadeMetadata {
     status: string;
     retries: number;
     topicArr: string[];
 }
 declare type ServiceCallback = (msg: KafkaConsumerMessageInterface, resolve: RouteCallback, reject: RouteCallback) => void;
-declare type RouteCallback = (msg: KafkaConsumerMessageInterface) => void;
-export { ProducerInterface, ConsumerInterface, AdminInterface, KafkaInterface, KafkaProducerMessageInterface, KafkaConsumerMessageInterface, CascadeMetadata, ServiceCallback, RouteCallback, };
+declare type RouteCallback = (msg: KafkaConsumerMessageInterface, status?: string) => void;
+export { ProducerInterface, ConsumerInterface, AdminInterface, KafkaInterface, KafkaProducerMessageInterface, KafkaConsumerMessageInterface, ProducerRoute, CascadeMetadata, ServiceCallback, RouteCallback, };
