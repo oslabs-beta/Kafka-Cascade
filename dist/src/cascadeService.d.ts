@@ -22,6 +22,7 @@ declare class CascadeService extends EventEmitter {
         timeoutLimit?: number[];
         batchLimit?: number[];
     }): Promise<any>;
+    getKafkaTopics(): string[];
     run(): Promise<any>;
     stop(): Promise<any>;
     pause(): Promise<any>;
