@@ -129,4 +129,16 @@ describe('Routes Tests', () => {
     }
     expect(dlq).toHaveBeenCalledTimes(messageCount);//dlq should be the same as the messagecount
   });
+
+  it('Can generate all of the kafka topics', async () => {
+    testService = await cascade.service(kafka, 'test-topic', 'test-group', jest.fn(), jest.fn(), jest.fn());
+    const retryLevels = 5;
+    await testService.setDefaultRoute(retryLevels);
+    // create test route
+    const routeLevels = 3;
+    await testService.setRoute('test-route', routeLevels);
+
+    const topics = testService.getKafkaTopics();
+    expect(topics).toHaveLength(retryLevels + routeLevels);
+  });
 });

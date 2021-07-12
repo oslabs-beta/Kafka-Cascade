@@ -113,6 +113,12 @@ class CascadeService extends EventEmitter {
     });
   }
 
+  getKafkaTopics():string[] {
+    let topics:string[] = [];
+    this.producer.routes.forEach(route => topics = topics.concat(route.topics));
+    return topics;
+  }
+
   run():Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
