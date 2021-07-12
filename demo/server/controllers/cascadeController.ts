@@ -128,7 +128,7 @@ const sendMessageContinuous = async () => {
           value: JSON.stringify({success: 0.3}),
       }],
     })
-      .catch(error => console.log('Error in sendMessageContinuous:', error));
+    .catch(error => console.log('Error in sendMessageContinuous:', error));
   }
   setTimeout(sendMessageContinuous, Math.round(1/messageRate * 1000));
 };

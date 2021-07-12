@@ -2,9 +2,6 @@ const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 import CascadeProducer from './cascadeProducer';
 import CascadeConsumer from './cascadeConsumer';
-import { rejects } from 'assert/strict';
-import { resolve } from 'path/posix';
-import { emit } from 'process';
 
 // kafka object to create producer and consumer
 // service callback

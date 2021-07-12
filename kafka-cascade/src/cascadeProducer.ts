@@ -8,7 +8,7 @@ class CascadeProducer extends EventEmitter {
   retryTopics: string[];
   paused: boolean;
   pausedQueue: Queue<Types.KafkaConsumerMessageInterface>;
-  retryOptions: {timeout?: number[], batchLimit: number};
+  retryOptions: {timeout?: number[], batchLimit?: number};
   timeout: number[] = [];
   batch: Types.KafkaProducerMessageInterface[] = [];
   batchLimit: number[] = [];
@@ -169,6 +169,7 @@ class CascadeProducer extends EventEmitter {
     if(options && options.batchLimit) this.batchLimit = options.batchLimit;
     else this.batchLimit = (new Array(topicsArr.length)).fill(1);
 
+    this.batch = [];
     this.retryTopics.forEach((topic) => {
       const emptyMsg = {
         topic,
