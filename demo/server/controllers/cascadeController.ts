@@ -38,7 +38,7 @@ var service: Cascade.CascadeService;
 const startService = async (options?: {timeoutLimit?:number[], batchLimit?:number[]}) => {
   levelCounts = (new Array(retryLevels+1)).fill(0);
   service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-  await service.setRetryLevels(retryLevels, options);
+  await service.setDefaultRoute(retryLevels, options);
   
   await service.connect();
   await producer.connect();

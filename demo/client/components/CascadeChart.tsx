@@ -58,7 +58,7 @@ export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
           backgroundColor: colors,
           borderColor: colors,
           data: [],
-          borderWdith: 0,
+          borderWidth: 0,
         }]
       }
     }

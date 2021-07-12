@@ -2,9 +2,9 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './cascade.mockclient.test';
 
-// const log = console.log;
-// console.log = (test, ...args) => test === 'test' && log(args); 
-console.log = jest.fn();
+const log = console.log;
+console.log = (test, ...args) => test === 'test' && log(args); 
+// console.log = jest.fn();
 process.env.test = 'test';
 
 describe('Basic service tests', () => {
@@ -34,7 +34,7 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     const retryLevels = 5;
-    await testService.setRetryLevels(retryLevels);
+    await testService.setDefaultRoute(retryLevels);
     await testService.connect();
     await testService.run();
 
@@ -78,7 +78,7 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, success, dlq);
     const retryLevels = 5;
-    await testService.setRetryLevels(retryLevels);
+    await testService.setDefaultRoute(retryLevels);
     await testService.connect();
     await testService.run();
 
