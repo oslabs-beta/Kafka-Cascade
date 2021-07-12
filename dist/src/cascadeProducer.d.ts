@@ -1,31 +1,35 @@
 declare const EventEmitter: any;
 import * as Types from './kafkaInterface';
+import Queue from './util/queue';
 declare class CascadeProducer extends EventEmitter {
     producer: Types.ProducerInterface;
+    admin: Types.AdminInterface;
+    topic: string;
     dlqCB: Types.RouteCallback;
     retryTopics: string[];
     paused: boolean;
-    pausedQueue: Types.KafkaConsumerMessageInterface[];
-    retryOptions: {
-        timeout?: number[];
-        batchLimit: number;
-    };
-    timeout: number[];
-    batch: Types.KafkaProducerMessageInterface[];
-    batchLimit: number[];
+    pausedQueue: Queue<{
+        msg: Types.KafkaConsumerMessageInterface;
+        status: string;
+    }>;
     sendStorage: {};
-    constructor(kafka: Types.KafkaInterface, dlqCB: Types.RouteCallback);
+    routes: Types.ProducerRoute[];
+    constructor(kafka: Types.KafkaInterface, topic: string, dlqCB: Types.RouteCallback);
     connect(): Promise<any>;
     disconnect(): Promise<any>;
     pause(): void;
     resume(): Promise<any>;
     stop(): Promise<any>;
-    send(msg: Types.KafkaConsumerMessageInterface): Promise<any>;
-    sendTimeout(id: any, msg: any, retries: any): Promise<unknown>;
-    sendBatch(msg: any, retries: any): Promise<unknown>;
-    setRetryTopics(topicsArr: string[], options?: {
+    send(msg: Types.KafkaConsumerMessageInterface, status: string): Promise<any>;
+    sendTimeout(id: string, msg: Types.KafkaProducerMessageInterface, retries: number, route: Types.ProducerRoute): Promise<unknown>;
+    sendBatch(msg: Types.KafkaProducerMessageInterface, retries: number, route: Types.ProducerRoute): Promise<unknown>;
+    setDefaultRoute(count: number, options?: {
         timeoutLimit?: number[];
         batchLimit?: number[];
-    }): void;
+    }): Promise<any>;
+    setRoute(status: string, count: number, options?: {
+        timeoutLimit?: number[];
+        batchLimit?: number[];
+    }): Promise<any>;
 }
 export default CascadeProducer;

@@ -91,16 +91,26 @@ class CascadeService extends EventEmitter {
     });  
   }
 
-  setDefaultRoute(count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}): Promise<any> {
+  setDefaultRoute(count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
     return new Promise((resolve, reject) => {
       this.producer.setDefaultRoute(count, options)
         .then(res => resolve(res))
         .catch(error => {
           reject(error);
+          this.emit('error', error);
+        });
+    });
+  }
+
+  setRoute(status:string, count: number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.producer.setRoute(status, count, options)
+        .then(res => resolve(res))
+        .catch(error => {
           reject(error);
           this.emit('error', error);
-        })
-    })
+        });
+    });
   }
 
   run():Promise<any> {

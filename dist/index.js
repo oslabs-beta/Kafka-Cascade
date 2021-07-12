@@ -19,7 +19,7 @@ exports.CascadeConsumer = cascadeConsumer_1.default;
 const Types = require("./src/kafkaInterface");
 exports.Types = Types;
 module.exports = {
-    service: (kafka, topic, groupId, serviceCB, successCB, dlqCB = (msg) => console.log('DQL Message received')) => {
+    service: (kafka, topic, groupId, serviceCB, successCB, dlqCB = (msg) => console.log('DLQ Message received')) => {
         return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
             try {
                 const newServ = new cascadeService_1.default(kafka, topic, groupId, serviceCB, successCB, dlqCB);

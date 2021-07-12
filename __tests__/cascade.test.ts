@@ -2,9 +2,9 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './cascade.mockclient.test';
 
-const log = console.log;
-console.log = (test, ...args) => test === 'test' && log(args); 
-// console.log = jest.fn();
+// const log = console.log;
+// console.log = (test, ...args) => test === 'test' && log(args); 
+console.log = jest.fn();
 process.env.test = 'test';
 
 describe('Basic service tests', () => {

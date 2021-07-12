@@ -8,16 +8,17 @@ declare class CascadeService extends EventEmitter {
     serviceCB: Types.ServiceCallback;
     successCB: Types.RouteCallback;
     dlqCB: Types.RouteCallback;
-    retries: number;
-    topicsArr: string[];
     producer: CascadeProducer;
     consumer: CascadeConsumer;
-    timeout: number;
     events: string[];
     constructor(kafka: Types.KafkaInterface, topic: string, groupId: string, serviceCB: Types.ServiceCallback, successCB: Types.RouteCallback, dlqCB: Types.RouteCallback);
     connect(): Promise<any>;
     disconnect(): Promise<any>;
-    setRetryLevels(count: number, options?: {
+    setDefaultRoute(count: number, options?: {
+        timeoutLimit?: number[];
+        batchLimit?: number[];
+    }): Promise<any>;
+    setRoute(status: string, count: number, options?: {
         timeoutLimit?: number[];
         batchLimit?: number[];
     }): Promise<any>;

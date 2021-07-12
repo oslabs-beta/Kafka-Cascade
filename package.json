@@ -1,6 +1,6 @@
 {
   "name": "kafka-cascade",
-  "version": "0.0.13",
+  "version": "0.8.0",
   "description": "DLQ handling for KafkaJS",
   "main": "./dist/index.js",
   "scripts": {

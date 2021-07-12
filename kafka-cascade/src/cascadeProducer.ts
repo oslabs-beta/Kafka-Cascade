@@ -94,12 +94,16 @@ class CascadeProducer extends EventEmitter {
       }
 
       const metadata = JSON.parse(msg.message.headers.cascadeMetadata);
+      if(metadata.status !== status) {
+        metadata.retries = 0;
+        metadata.status = status;
+      }
+
       // check if retries exceeds allowed number of retries
       if (metadata.retries < route.topics.length) {
 
         msg.topic = route.topics[metadata.retries];
         metadata.retries += 1;
-        metadata.status = status;
         // populate producerMessage object
         let id = `${Date.now()}${Math.floor(Math.random() * Date.now())}`;
         const producerMessage = {
@@ -211,6 +215,56 @@ class CascadeProducer extends EventEmitter {
           topics: [],
         }
         defaultRoute.topics.forEach(topic => registerTopics.topics.push({topic}));
+
+        await this.admin.createTopics(registerTopics);
+        const re = new RegExp(`^${this.topic}-cascade-retry-.*`);
+        console.log('topics registered =', (await this.admin.listTopics()).filter(topic => topic === this.topic || topic.search(re) > -1));
+        await this.admin.disconnect();
+
+        setTimeout(() => {
+          console.log('Registered topics with Kafka...');
+          resolve(true);
+        }, 10);
+      }
+      catch(error) {
+        this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+        reject(error);
+      }
+    });
+  }
+
+  setRoute(status:string, count:number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const route:any = { status, retryLevels:count, topics:[] };
+        for(let i = 0; i < count; i++){
+          route.topics.push(this.topic + '-cascade-retry-' + 'route-' + status + '-' + (i+1));
+        }
+
+        if(options && options.timeoutLimit) route.timeoutLimit = options.timeoutLimit;
+        else route.timeoutLimit = (new Array(route.topics.length)).fill(0);
+        
+        if(options && options.batchLimit) route.batchLimit = options.batchLimit;
+        else route.batchLimit = (new Array(route.topics.length)).fill(1);
+
+        route.levels = [];
+        route.topics.forEach((topic) => {
+          const emptyMsg = {
+            topic,
+            messages: [],
+          };
+          route.levels.push(emptyMsg);
+        });
+        
+        this.routes.push(route);
+
+        // get an admin client to pre-register topics
+        await this.admin.connect();
+        const registerTopics = {
+          waitForLeaders: true,
+          topics: [],
+        }
+        route.topics.forEach(topic => registerTopics.topics.push({topic}));
 
         await this.admin.createTopics(registerTopics);
         const re = new RegExp(`^${this.topic}-cascade-retry-.*`);
