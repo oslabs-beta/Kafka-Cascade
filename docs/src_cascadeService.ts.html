@@ -69,7 +69,7 @@
                     
                         <a
                             class="link user-link "
-                            href="/"
+                            href="/index.html"
                         >
                             Home
                         </a>
@@ -127,7 +127,7 @@ class CascadeService extends EventEmitter {
   kafka: Types.KafkaInterface;
   topic: string;
   serviceCB: Types.ServiceCallback;
-  successCB: Types.RouteCallback;
+  successCB: (...args: any[]) => any;
   dlqCB: Types.RouteCallback;
   producer: CascadeProducer;
   consumer: CascadeConsumer;
@@ -151,7 +151,7 @@ class CascadeService extends EventEmitter {
    * CascadeService objects should be constructed from [cascade.service]{@link module:cascade.service}
    */
   constructor(kafka: Types.KafkaInterface, topic: string, groupId: string,
-    serviceCB: Types.ServiceCallback, successCB: Types.RouteCallback, dlqCB: Types.RouteCallback) {
+    serviceCB: Types.ServiceCallback, successCB: (...args: any[]) => any, dlqCB: Types.RouteCallback) {
       super();
       this.kafka = kafka;
       this.topic = topic;
@@ -274,7 +274,7 @@ class CascadeService extends EventEmitter {
     return new Promise(async (resolve, reject) => {
       try {
         const status = await this.consumer.run(this.serviceCB, 
-          (msg) => { this.emit('success', msg); this.successCB(msg) }, 
+          (...args) => { this.emit('success', ...args); this.successCB(...args) }, 
           async (msg, status:string = '') => {
             try {
               await this.producer.send(msg, status);

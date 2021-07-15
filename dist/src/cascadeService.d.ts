@@ -2,16 +2,22 @@ declare const EventEmitter: any;
 import * as Types from './kafkaInterface';
 import CascadeProducer from './cascadeProducer';
 import CascadeConsumer from './cascadeConsumer';
+/**
+ * CascadeService
+ */
 declare class CascadeService extends EventEmitter {
     kafka: Types.KafkaInterface;
     topic: string;
     serviceCB: Types.ServiceCallback;
-    successCB: Types.RouteCallback;
+    successCB: (...args: any[]) => any;
     dlqCB: Types.RouteCallback;
     producer: CascadeProducer;
     consumer: CascadeConsumer;
     events: string[];
-    constructor(kafka: Types.KafkaInterface, topic: string, groupId: string, serviceCB: Types.ServiceCallback, successCB: Types.RouteCallback, dlqCB: Types.RouteCallback);
+    /**
+     * CascadeService objects should be constructed from [cascade.service]{@link module:cascade.service}
+     */
+    constructor(kafka: Types.KafkaInterface, topic: string, groupId: string, serviceCB: Types.ServiceCallback, successCB: (...args: any[]) => any, dlqCB: Types.RouteCallback);
     /**
      * Connects the service to kafka
      * Emits a 'connect' event

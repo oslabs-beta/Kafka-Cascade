@@ -21,7 +21,13 @@ const cascadeConsumer_1 = require("./cascadeConsumer");
 // topic consumer
 // retry levels -> provide default
 // retry strategies per level
+/**
+ * CascadeService
+ */
 class CascadeService extends EventEmitter {
+    /**
+     * CascadeService objects should be constructed from [cascade.service]{@link module:cascade.service}
+     */
     constructor(kafka, topic, groupId, serviceCB, successCB, dlqCB) {
         super();
         this.events = [
@@ -150,7 +156,7 @@ class CascadeService extends EventEmitter {
     run() {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const status = yield this.consumer.run(this.serviceCB, (msg) => { this.emit('success', msg); this.successCB(msg); }, (msg, status = '') => __awaiter(this, void 0, void 0, function* () {
+                const status = yield this.consumer.run(this.serviceCB, (...args) => { this.emit('success', ...args); this.successCB(...args); }, (msg, status = '') => __awaiter(this, void 0, void 0, function* () {
                     try {
                         yield this.producer.send(msg, status);
                     }
