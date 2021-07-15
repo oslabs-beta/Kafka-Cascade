@@ -19,6 +19,16 @@ exports.CascadeConsumer = cascadeConsumer_1.default;
 const Types = require("./src/kafkaInterface");
 exports.Types = Types;
 module.exports = {
+    /**
+     * Creates a new service that listens to and produces kafka messages
+     * @param kafka - KakfaJS Kafka Object
+     * @param {string} topic - Topic that the service listens for and runs the service
+     * @param {string} groupId - Group Id for the service consumer
+     * @param {msg, resolve, reject} serviceCB  - Callback that is run whenever 'topic' is received or retry. It accepts a kafka message, resolve callback and reject callback
+     * @param successCB  - Callback that is run when the serviceCB resolves a message, accepts the kafka message
+     * @param dlqCB - Callback that is run when the serviceCB rejects a message and cannot be retried anymore
+     * @returns {CascadeService} - Service object
+     */
     service: (kafka, topic, groupId, serviceCB, successCB, dlqCB = (msg) => console.log('DLQ Message received')) => {
         return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
             try {
@@ -30,6 +40,11 @@ module.exports = {
             }
         }));
     },
+    /**
+     * Utility function that parses the metadata that cascade adds to the kafka message headers
+     * @param msg
+     * @returns {object}
+     */
     getMetadata: (msg) => {
         if (typeof (msg) !== 'object' || !msg.message || !msg.message.headers || !msg.message.headers.cascadeMetadata)
             return;

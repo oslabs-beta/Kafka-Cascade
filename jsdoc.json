@@ -1,0 +1,34 @@
+{
+  "name": "Kafka-Cascade Documentation",
+  "opts": {
+    "readme": "./docs/docs.md",
+    "template": "node_modules/better-docs"
+  },
+  "tags": {
+    "allowUnknownTags": ["optional"]
+  },
+  "plugins": [
+      "node_modules/better-docs/typescript"
+  ],
+  "source": {
+      "includePattern": "\\.(jsx|js|ts|tsx)$"
+  },
+  "templates": {
+    "name": "Kafka-Cascade Documentation",
+    "better-docs": {
+      "name": "Kafka-Cascade Documentation",
+      "title": "Kafka-Cascade Documentation",
+      "hideGenerator": false,
+      "navLinks": [
+        {
+          "label": "Github",
+          "href": "https://github.com/oslabs-beta/Kafka-Cascade"
+        },
+        {
+          "label": "Home",
+          "href": "/"
+        }
+      ]
+    }
+  }
+}
