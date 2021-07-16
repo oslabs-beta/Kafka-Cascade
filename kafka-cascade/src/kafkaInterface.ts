@@ -55,6 +55,15 @@ interface KafkaConsumerMessageInterface {
   }
 }
 
+interface ProducerRoute {
+  status: string,
+  retryLevels: number,
+  timeoutLimit: number[],
+  batchLimit: number[],
+  levels: KafkaProducerMessageInterface[],
+  topics: string[],
+}
+
 interface CascadeMetadata {
   status: string,
   retries: number,
@@ -63,7 +72,7 @@ interface CascadeMetadata {
 
 type ServiceCallback = (msg: KafkaConsumerMessageInterface, resolve: RouteCallback, reject: RouteCallback) => void;
 
-type RouteCallback = (msg: KafkaConsumerMessageInterface) => void;
+type RouteCallback = (msg: KafkaConsumerMessageInterface, status?:string) => void;
 
 export { 
   ProducerInterface, 
@@ -71,7 +80,8 @@ export {
   AdminInterface,
   KafkaInterface, 
   KafkaProducerMessageInterface, 
-  KafkaConsumerMessageInterface, 
+  KafkaConsumerMessageInterface,
+  ProducerRoute, 
   CascadeMetadata,
   ServiceCallback, 
   RouteCallback,

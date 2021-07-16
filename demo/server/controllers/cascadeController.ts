@@ -38,7 +38,7 @@ var service: Cascade.CascadeService;
 const startService = async (options?: {timeoutLimit?:number[], batchLimit?:number[]}) => {
   levelCounts = (new Array(retryLevels+1)).fill(0);
   service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-  await service.setRetryLevels(retryLevels, options);
+  await service.setDefaultRoute(retryLevels, options);
   
   await service.connect();
   await producer.connect();
@@ -128,7 +128,7 @@ const sendMessageContinuous = async () => {
           value: JSON.stringify({success: 0.3}),
       }],
     })
-      .catch(error => console.log('Error in sendMessageContinuous:', error));
+    .catch(error => console.log('Error in sendMessageContinuous:', error));
   }
   setTimeout(sendMessageContinuous, Math.round(1/messageRate * 1000));
 };

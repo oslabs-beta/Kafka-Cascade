@@ -29,7 +29,7 @@ describe('Testing timeout retry strategy', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     const retryLevels = 2;
-    await testService.setRetryLevels(retryLevels, { timeoutLimit:(new Array(retryLevels).fill(1)) } );
+    await testService.setDefaultRoute(retryLevels, { timeoutLimit:(new Array(retryLevels).fill(1)) } );
     await testService.connect();
     await testService.run();
 
@@ -83,7 +83,7 @@ describe('Testing batching retry strategy', () => {
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     retryLevels = 2;
     messageCount = 10;
-    await testService.setRetryLevels(retryLevels, { batchLimit:(new Array(retryLevels).fill(messageCount)) } );
+    await testService.setDefaultRoute(retryLevels, { batchLimit:(new Array(retryLevels).fill(messageCount)) } );
     await testService.connect();
     await testService.run();
 
@@ -104,7 +104,7 @@ describe('Testing batching retry strategy', () => {
     expect(producer.offsets['test-topic'].count).toBe(messageCount - 1);
     const testServiceOffsets = testService.producer.producer.offsets;
     expect(Object.keys(testServiceOffsets)).toHaveLength(0);
-    expect(testService.producer.batch[0].messages).toHaveLength(messageCount - 1);
+    expect(testService.producer.routes[0].levels[0].messages).toHaveLength(messageCount - 1);
     expect(dlq).not.toHaveBeenCalled();
   });
   

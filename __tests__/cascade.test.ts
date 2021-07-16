@@ -34,7 +34,7 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
     const retryLevels = 5;
-    await testService.setRetryLevels(retryLevels);
+    await testService.setDefaultRoute(retryLevels);
     await testService.connect();
     await testService.run();
 
@@ -78,7 +78,7 @@ describe('Basic service tests', () => {
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, success, dlq);
     const retryLevels = 5;
-    await testService.setRetryLevels(retryLevels);
+    await testService.setDefaultRoute(retryLevels);
     await testService.connect();
     await testService.run();
 
