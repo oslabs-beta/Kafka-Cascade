@@ -1,5 +1,8 @@
 import React, { FC, useState } from 'react';
 import { OptionContainer } from './containers/OptionContainer';
+import FeaturesContainer from './containers/FeaturesContainer';
+import AboutContainer from './containers/AboutContainer';
+import GettingStartedContainer from './containers/GettingStartedContainer';
 import { CascadeChart } from './components/CascadeChart';
 import NavBar from './components/NavBar';
 import socket from './socket';
@@ -7,8 +10,20 @@ import { Element } from 'react-scroll';
 import {
   createStyles, makeStyles, Typography, Container,
 } from '@material-ui/core';
+import { createTheme } from '@material-ui/core/styles'
 
 import './App.scss';
+
+const theme = createTheme({
+    palette: {
+      primary: {
+        main:'#673ab7'
+      },
+      secondary: {
+        main: '#ffc400'
+      },
+    },
+});
 
 const useStyles = makeStyles(() => createStyles({
   landing: {
@@ -67,7 +82,7 @@ export const App: FC<AppProps> = () => {
       <NavBar />
       <Container className={classes.landing} component={Element} name="landing">
         <Typography
-          variant="h1"
+          variant="h2"
           align="center"
           color="textPrimary"
           gutterBottom
@@ -75,7 +90,7 @@ export const App: FC<AppProps> = () => {
           Kafka Cascade
         </Typography>
         <Typography
-          variant="h3"
+          variant="h4"
           align="center"
           color="textSecondary"
           gutterBottom
@@ -84,7 +99,10 @@ export const App: FC<AppProps> = () => {
         </Typography>
       </Container>
       <Container className={classes.container} component={Element} name="features">
-
+        <FeaturesContainer/>
+      </Container>
+      <Container className={classes.container} component={Element} name="getting started">
+        <GettingStartedContainer/>
       </Container>
       <Container className={classes.container} component={Element} name="web demo">
         <Typography
@@ -99,7 +117,7 @@ export const App: FC<AppProps> = () => {
         <CascadeChart />
       </Container>
       <Container className={classes.container} component={Element} name="about">
-
+        <AboutContainer/>
       </Container>
     </Container>
   );

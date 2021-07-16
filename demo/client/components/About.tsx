@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import {
-  makeStyles, createStyles, Card, CardContent, Typography,
+  makeStyles, createStyles, Card, CardContent,
+  Typography, Container,
 } from '@material-ui/core';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import LinkedInIcon from '@material-ui/icons/LinkedIn';
@@ -13,10 +14,26 @@ interface Props {
   }
 }
 
-const About: FC<Props> = ({
-  details,
-}: Props) => {
+const About: FC<Props> = ({ details }: Props) => {
   const useStyles = makeStyles(() => createStyles({
+    wrapper: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyItems: 'center',
+      alignItems: 'center',
+    },
+    card: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      alignContent: 'center',
+      justifyContent: 'space-between',
+      marginTop: '3vh',
+      backgroundColor: 'rgba(225, 218, 232)',
+      paddingTop: '2vh',
+      paddingBottom: '2vh',
+      width: 'auto',
+    },
     root: {
       display: 'flex',
       alignItems: 'center',
@@ -32,21 +49,16 @@ const About: FC<Props> = ({
   const classes = useStyles();
 
   return (
-    <Card className={classes.root}>
-      <CardContent>
-        <Typography color="textPrimary" align="center" gutterBottom>
-          {details.name}
-        </Typography>
-        <Typography align="center">
-          <a href={details.github}>
-            <GitHubIcon color="primary" />
-          </a>
-          <a href={details.linkedIn}>
-            <LinkedInIcon color="primary" />
-          </a>
-        </Typography>
-      </CardContent>
-    </Card>
+    <Container className={classes.wrapper}>
+      <Typography 
+        variant="h4"
+        color="textPrimary"
+        align="center"
+        gutterBottom
+      >
+        About
+      </Typography>
+    </Container>   
   );
 };
 

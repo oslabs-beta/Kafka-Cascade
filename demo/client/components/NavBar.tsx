@@ -52,17 +52,6 @@ const NavBar: FC = () => {
           <Button
             className={classes.button}
             component={Link}
-            to="web demo"
-            activeClass="active"
-            offset={-75}
-            color="inherit"
-            smooth="easeInOutQuint"
-          >
-            Web Demo
-          </Button>
-          <Button
-            className={classes.button}
-            component={Link}
             to="getting started"
             activeClass="active"
             offset={-75}
@@ -70,6 +59,17 @@ const NavBar: FC = () => {
             smooth="easeInOutQuint"
           >
             Getting Started
+          </Button>
+          <Button
+            className={classes.button}
+            component={Link}
+            to="web demo"
+            activeClass="active"
+            offset={-75}
+            color="inherit"
+            smooth="easeInOutQuint"
+          >
+            Web Demo
           </Button>
           <Button
             className={classes.button}
