@@ -123,7 +123,7 @@ class CascadeProducer extends EventEmitter {
             .then(res => resolve(res))
             .catch(res => {
               reject(res);
-           });
+            });
         }, msg: msg };
       //sends message after timeout expires
       const scheduler = () => {

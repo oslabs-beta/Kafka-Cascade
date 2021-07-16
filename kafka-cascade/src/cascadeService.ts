@@ -2,9 +2,6 @@ const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 import CascadeProducer from './cascadeProducer';
 import CascadeConsumer from './cascadeConsumer';
-import { rejects } from 'assert/strict';
-import { resolve } from 'path/posix';
-import { emit } from 'process';
 
 // kafka object to create producer and consumer
 // service callback
@@ -16,6 +13,7 @@ import { emit } from 'process';
 // retry levels -> provide default
 // retry strategies per level
 
+//drives the whole library
 class CascadeService extends EventEmitter {
   kafka: Types.KafkaInterface;
   topic: string;
