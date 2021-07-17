@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FC } from 'react';
 import {
-  createStyles, makeStyles, withStyles, AppBar, Toolbar, IconButton, Button, Icon,
+  createStyles, makeStyles, withStyles, createTheme, AppBar, Toolbar, IconButton, Button, Icon, ThemeProvider,
 } from '@material-ui/core';
 import { Link } from 'react-scroll';
 
@@ -22,20 +22,37 @@ const useStyles = makeStyles(() => createStyles({
   },
 }));
 
+const iconStyle = makeStyles(() => createStyles({
+  root:{
+    overflow: 'visible',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+}));
+
 const NavBar: FC = () => {
   const classes = useStyles();
+  const iconClass = iconStyle();
   return (
     <div className={classes.root}>
       <AppBar>
         <Toolbar className={classes.landingButtons}>
           <IconButton className={classes.button}>
             <Icon
+            className={iconClass.root}
               component={Link}
               to="landing"
               activeClass="active"
               smooth="easeInOutQuint"
             >
-              <img alt="icon" src="favIcon.png" />
+              <img 
+              alt="icon" 
+              style={{
+                height: '7vh',
+              }}
+              src="favIconLarger.png" />
             </Icon>
           </IconButton>
           <Button

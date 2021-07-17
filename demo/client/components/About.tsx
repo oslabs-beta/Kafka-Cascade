@@ -35,25 +35,25 @@ const About: FC = () => {
       name: 'Davette Bryan',
       github: 'https://github.com/Davette-Bryan',
       linkedin: 'https://www.linkedin.com/in/davette-bryan/',
-      photo: 'IMG_7256.jpg',
+      photo: 'Davette_Bryan.jpg',
     },
     {
       name: 'Robert Du',
       github: 'https://github.com/robertcdu',
       linkedin: 'https://www.linkedin.com/in/robert--du/',
-      photo: 'RCD_Small.jpg',
+      photo: 'Robert_Du.jpg',
     },
     {
       name: 'Seung Joon Lee',
       github: 'https://github.com/GnuesJ',
       linkedin: '',
-      photo: '48038447.jpeg',
+      photo: 'Cartoon_Josh.jpeg',
     },
     {
       name: 'Michael Weber',
       github: 'https://github.com/michaelweberjr',
       linkedin: 'https://www.linkedin.com/in/michael-weber-jr/',
-      photo: '',
+      photo: 'Michael_Weber.png',
     },
   ];
 
