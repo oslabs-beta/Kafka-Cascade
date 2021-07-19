@@ -33,11 +33,14 @@ export const OptionContainer: FC<any> = (props:any) => {
   const [isStarted, setIsStarted] = useState<boolean>(false);
   //used to pause and resume demo
   const [isPaused, setIsPaused] = useState<boolean>(false);
-
+  //defaultParams
+  const [defaultParams, isDefaultParams] = useState<any>({numberOfRetries, retryType, timeoutLimitArray, batchLimitArray})
 
 
   //used by RadioButtonGroup component, changes the type of retry
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    //prevents user from making change after starting the demo
+    if(isStarted) return;
     let newRetryType = {...retryType};
     newRetryType = {
       fastRetry: false,
@@ -80,8 +83,13 @@ export const OptionContainer: FC<any> = (props:any) => {
 
   //reset
   const resetHandler = () => {
+    if(isStarted) return;
     //write functionality here
-
+    setNumberOfRetries(defaultParams.numberOfRetries);
+    setRetryType(defaultParams.retryType);
+    setTimeoutLimitArray(defaultParams.timeoutLimitArray);
+    setBatchLimitArray(defaultParams.batchLimitArray)
+    setRetryOptionToggle(false);
   }
 
   //stops the current session
@@ -105,6 +113,12 @@ export const OptionContainer: FC<any> = (props:any) => {
 
   //updates the number of retrys
   const updateNumberOfRetriesHandler = (event) => {
+    //prevents user from making change after starting the demo
+    if(isStarted){ 
+      event.target.value = event.target.defaultValue;
+      return
+    };
+
     let value = event.target.value;
     if(value >= 0 && value <= retryLevelLIMIT)
     setNumberOfRetries(event.target.value);
@@ -123,6 +137,12 @@ export const OptionContainer: FC<any> = (props:any) => {
 
   //updates the value of a retry level from the option menu
   const updateLimitArrayHandler = (event, index) => {
+    //prevents user from making change after starting the demo
+    if(isStarted){
+      event.target.value = event.target.defaultValue;
+      return;
+    }
+
     if(retryType.timeout){
       setTimeoutLimitArray(() => {let copy = timeoutLimitArray; copy[index] = parseInt(event.target.value); return copy})
     }
