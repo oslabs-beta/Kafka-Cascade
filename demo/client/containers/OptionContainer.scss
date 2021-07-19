@@ -29,3 +29,52 @@
 .endButton {
   margin-left: 10px;
 }
+
+.retryOptionContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.numberOfRetriesContainer {
+  width: 140px;
+}
+
+.frameContainer{
+  height: 10em;
+  width: 10em;
+  min-height: 1px;
+  float: left;
+}
+
+.frame {
+  margin-left: 100px;
+  overflow-y: auto;
+  border: 1px solid purple;
+  height: 10em;
+  width: 10em;
+  line-height: 1em;
+}
+
+.frame::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+
+.frame::-webkit-scrollbar:vertical {
+  width: 11px;
+}
+
+.frame::-webkit-scrollbar:horizontal {
+  height: 11px;
+}
+
+.frame::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 2px solid white; /* should match background, can't be transparent */
+  background-color: rgba(0, 0, 0, .5);
+}
+
+.textField::-webkit-scrollbar{
+  -webkit-appearance: none; 
+  margin: 0; 
+}
