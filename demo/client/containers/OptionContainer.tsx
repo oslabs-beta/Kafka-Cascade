@@ -14,6 +14,8 @@ import { colors } from '@material-ui/core';
 export const OptionContainer: FC<any> = (props:any) => {
   //number of retry levels
   const [numberOfRetries, setNumberOfRetries] = useState<any>(5)
+  //set the maximum number of retry level
+  const [retryLevelLIMIT, setRetryLevelLimit] = useState<Number>(10);
   //retry types
   const [retryType, setRetryType] = useState<any>({
     fastRetry: true,
@@ -65,6 +67,24 @@ export const OptionContainer: FC<any> = (props:any) => {
     setRetryOptionToggle(!retryOptionToggle);
   }
 
+  //updates the number of retrys
+  const updateNumberOfRetriesHandler = (event) => {
+    let value = event.target.value;
+    if(value >= 0 && value <= retryLevelLIMIT)
+    setNumberOfRetries(event.target.value);
+    console.log(numberOfRetries);
+    if(timeoutLimitArray.length > value){
+      setTimeoutLimitArray(timeoutLimitArray.slice(0,value))
+      setBatchLimitArray(batchLimitArray.slice(0,value))
+    }
+    else{
+      for(let i = timeoutLimitArray.length; i < value; i++){
+        timeoutLimitArray.push(5);
+        batchLimitArray.push(5);
+      }
+    }
+  }
+
   //updates the value of a retry level from the option menu
   const updateLimitArrayHandler = (event, index) => {
     if(retryType.timeout){
@@ -113,18 +133,27 @@ export const OptionContainer: FC<any> = (props:any) => {
     retryOptionContainer = (
       <div className="retryOptionContainer">
         <div>
-          <TextField
-            className='textField'
-            id="filled-number"
-            label="Number of Retries"
-            type="number"
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
+          <div className='numberOfRetriesContainer'>
+            <TextField
+              className='textField'
+              id="filled-number"
+              label="Number of Retries"
+              type="number"
+              fullWidth={true}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              defaultValue = {numberOfRetries}
+              inputProps={{ min: 0, max: retryLevelLIMIT}}
+              onChange={updateNumberOfRetriesHandler}
+              // onKeyPress = {(event) => {if(event.target.value > retryLevelLIMIT) event.target.blur()}}
+            />
+          </div>
           <RadioButtonGroup retryType={retryType} setRetryType={setRetryType} handleChange={handleChange}/>
         </div>
-        {retryLevelsContainer}
+        <div className='frameContainer'>
+          {retryLevelsContainer}
+        </div>
       </div>
     )
   }

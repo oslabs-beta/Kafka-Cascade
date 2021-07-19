@@ -36,14 +36,23 @@
   align-items: center;
 }
 
+.numberOfRetriesContainer {
+  width: 140px;
+}
 
+.frameContainer{
+  height: 10em;
+  width: 10em;
+  min-height: 1px;
+  float: left;
+}
 
 .frame {
   margin-left: 100px;
   overflow-y: auto;
   border: 1px solid purple;
   height: 10em;
-  width: 20em;
+  width: 10em;
   line-height: 1em;
 }
 
