@@ -29,10 +29,12 @@ export const OptionContainer: FC<any> = (props:any) => {
   const [batchLimitArray, setBatchLimitArray] = useState<Number[]>([6,6,6,6,6]);
   //Toggle visibility for retry option menu
   const [retryOptionToggle, setRetryOptionToggle] = useState<boolean>(false);
-  //used to toggle option buttons when demo starts
+  //used to toggle option buttons when demo starts AND used to prevent user from changing retry option
   const [isStarted, setIsStarted] = useState<boolean>(false);
   //used to pause and resume demo
   const [isPaused, setIsPaused] = useState<boolean>(false);
+
+
 
   //used by RadioButtonGroup component, changes the type of retry
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,34 +50,46 @@ export const OptionContainer: FC<any> = (props:any) => {
 
   //used by start button, initilize the options to the backend
   const startHandler = () => {
-    let options: any;
-    if(retryType.fastRetry) options = {};
-    else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
-    else options = {batchLimit: [6,6,6,6,6,6]}
-    socket.sendEvent('start', {retries: numberOfRetries, options});
-    setIsStarted(true);
+    if(!isStarted){
+      let options: any;
+      if(retryType.fastRetry) options = {};
+      //TODO: CHANGE DATA PASSED TO THE CREATED ARRAYS
+      else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
+      else options = {batchLimit: [6,6,6,6,6,6]}
+      socket.sendEvent('start', {retries: numberOfRetries, options});
+      setIsStarted(true);
+    }
   }
 
   //pause
   const pauseHandler = () => {
     //write functionality here
-    setIsPaused(true);
+    if(!isPaused){
+      socket.sendEvent('pause', {});
+      setIsPaused(true);
+    }
   }
   //resume
   const resumeHandler = () => {
     //write functionality here
-    setIsPaused(false);
+    if(isPaused){
+      socket.sendEvent('resume', {});
+      setIsPaused(false);
+    }
   }
 
   //reset
   const resetHandler = () => {
     //write functionality here
+
   }
 
   //stops the current session
   const stopHandler = () => {
-    socket.sendEvent('stop', {});
-    setIsStarted(false);
+    if(isStarted){ 
+      socket.sendEvent('stop', {});
+      setIsStarted(false);
+    }
   }
 
   //set the number of messages sent
@@ -183,6 +197,7 @@ export const OptionContainer: FC<any> = (props:any) => {
 
   let startPauseResumeToggle;
   let resetStopToggle;
+  //Toggles different types of button depending on the mode of isStarted and isPaused
   if(isStarted){
     resetStopToggle = <Box m={2}><Button className='stopButton' variant="contained" color="primary" onClick={stopHandler}>Stop</Button></Box>
     if(isPaused)
@@ -200,24 +215,6 @@ export const OptionContainer: FC<any> = (props:any) => {
       <div className='buttonsContainer'>
         {startPauseResumeToggle}
         {resetStopToggle}
-        {/* <Box m={2}>
-          <Button
-            className='startButton'
-            variant="contained"
-            color="primary"
-            onClick={startHandler}
-            >Start
-          </Button>
-        </Box>
-        <Box m={2}>
-          <Button
-            className='resetButton'
-            variant="contained"
-            color="secondary"
-            onClick={stopHandler}
-            >Reset
-          </Button>
-        </Box> */}
         <Box m={2}>
           <Button
             className='optionButton'
