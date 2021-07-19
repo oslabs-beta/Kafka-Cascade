@@ -9,13 +9,14 @@ app.use(express.json());
 
 app.get('/', (req, res)=>{
   res.status(200).sendFile(path.join(__dirname, '../index.html'));
-})
+});
 
 app.get('/dist/bundle.js', (req, res)=>{
   res.status(200).sendFile(path.join(__dirname, '../dist/bundle.js'));
-})
+});
 
 app.use(express.static('assets'));
+app.use('/doc', express.static(path.join(__dirname, '../../docs')));
 
 // start service
 app.post('/start', cascadeController.startService, (req, res) => {
@@ -35,6 +36,10 @@ app.post('/stop', cascadeController.stopService, (req, res) => {
    * Kafka-Cascade library currently has no way to shut itself down
    */
   server.close();
+});
+
+app.get('/favicon.ico', (req, res) => {
+  res.status(200).sendFile(path.join(__dirname, '../assets/favicon.ico'));
 })
 
 // 404 handler

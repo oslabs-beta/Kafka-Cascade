@@ -18,15 +18,18 @@
     "better-docs": {
       "name": "Kafka-Cascade Documentation",
       "title": "Kafka-Cascade Documentation",
+      "logo": "favIconLarger.png",
+      "css": "style.css",
       "hideGenerator": false,
       "navLinks": [
         {
+
           "label": "Github",
           "href": "https://github.com/oslabs-beta/Kafka-Cascade"
         },
         {
           "label": "Home",
-          "href": "/index.html"
+          "href": "/"
         }
       ]
     }

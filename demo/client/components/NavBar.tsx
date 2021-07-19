@@ -32,6 +32,10 @@ const iconStyle = makeStyles(() => createStyles({
   }
 }));
 
+const goToDocs = () => {
+  window.location.href = '/doc/index.html';
+}
+
 const NavBar: FC = () => {
   const classes = useStyles();
   const iconClass = iconStyle();
@@ -98,6 +102,17 @@ const NavBar: FC = () => {
             smooth="easeInOutQuint"
           >
             About
+          </Button>
+          <Button
+            className={classes.button}
+            component={Link}
+            activeClass="active"
+            offset={-75}
+            color="inherit"
+            smooth="easeInOutQuint"
+            onClick={goToDocs}
+          >
+            Documentation
           </Button>
         </Toolbar>
       </AppBar>
