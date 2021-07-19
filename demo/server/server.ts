@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 import cascadeController from './controllers/cascadeController';
 const path = require ('path');

@@ -5,7 +5,7 @@ import socket from '../websocket';
 
 const kafka = new Kafka({
   clientId: 'kafka-demo',
-  brokers: ['localhost:9092'],
+  brokers: [process.env.KAFKA_ADDRESS + ':29092'],
 });
 
 const producer = kafka.producer();  
@@ -35,16 +35,25 @@ const dlqCB:Cascade.Types.RouteCallback = (msg) => {
 
 var service: Cascade.CascadeService;
 
-const startService = async (options?: {timeoutLimit?:number[], batchLimit?:number[]}) => {
-  levelCounts = (new Array(retryLevels+1)).fill(0);
-  service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-  await service.setDefaultRoute(retryLevels, options);
-  
-  await service.connect();
-  await producer.connect();
-  console.log('Connected to Kafka server...');
-  await service.run();
-  console.log('Listening to Kafka server...');
+const startService = (options?: {timeoutLimit?:number[], batchLimit?:number[]}):Promise<any> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      levelCounts = (new Array(retryLevels+1)).fill(0);
+      service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
+      service.on('error', (error) => console.log(error));
+      await service.setDefaultRoute(retryLevels, options);
+      
+      await service.connect();
+      await producer.connect();
+      console.log('Connected to Kafka server...');
+      await service.run();
+      console.log('Listening to Kafka server...');
+      resolve(true);
+    }
+    catch(error) {
+      reject(error);
+    }
+  });
 }
 
 const stopService = async () => {
@@ -142,12 +151,17 @@ const sendMessageContinuous = async () => {
 //   return Math.random() * max;
 // }
 
-socket.use('start', (req, res) => {
-  console.log('Received start request');
-  if(!service) {
-    startService(req.options);
-    runningMessages = true;
-    sendMessageContinuous();
+socket.use('start', async (req, res) => {
+  try {
+    console.log('Received start request');
+    if(!service) {
+      await startService(req.options);
+      runningMessages = true;
+      sendMessageContinuous();
+    }
+  }
+  catch(error) {
+    console.log(error);
   }
 });
 
