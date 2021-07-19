@@ -29,6 +29,10 @@ export const OptionContainer: FC<any> = (props:any) => {
   const [batchLimitArray, setBatchLimitArray] = useState<Number[]>([6,6,6,6,6]);
   //Toggle visibility for retry option menu
   const [retryOptionToggle, setRetryOptionToggle] = useState<boolean>(false);
+  //used to toggle option buttons when demo starts
+  const [isStarted, setIsStarted] = useState<boolean>(false);
+  //used to pause and resume demo
+  const [isPaused, setIsPaused] = useState<boolean>(false);
 
   //used by RadioButtonGroup component, changes the type of retry
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,11 +53,29 @@ export const OptionContainer: FC<any> = (props:any) => {
     else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
     else options = {batchLimit: [6,6,6,6,6,6]}
     socket.sendEvent('start', {retries: numberOfRetries, options});
+    setIsStarted(true);
+  }
+
+  //pause
+  const pauseHandler = () => {
+    //write functionality here
+    setIsPaused(true);
+  }
+  //resume
+  const resumeHandler = () => {
+    //write functionality here
+    setIsPaused(false);
+  }
+
+  //reset
+  const resetHandler = () => {
+    //write functionality here
   }
 
   //stops the current session
-  const endHandler = () => {
+  const stopHandler = () => {
     socket.sendEvent('stop', {});
+    setIsStarted(false);
   }
 
   //set the number of messages sent
@@ -158,10 +180,27 @@ export const OptionContainer: FC<any> = (props:any) => {
     )
   }
 
+
+  let startPauseResumeToggle;
+  let resetStopToggle;
+  if(isStarted){
+    resetStopToggle = <Box m={2}><Button className='stopButton' variant="contained" color="primary" onClick={stopHandler}>Stop</Button></Box>
+    if(isPaused)
+      startPauseResumeToggle = <Box m={2}><Button className='resumeButton' variant="contained" color="primary" onClick={resumeHandler}>Resume</Button></Box>
+    else
+      startPauseResumeToggle = <Box m={2}><Button className='pauseButton' variant="contained" color="primary" onClick={pauseHandler}>Pause</Button></Box>
+  }
+  else{
+    resetStopToggle = <Box m={2}><Button className='resetButton' variant="contained" color="primary" onClick={resetHandler}>Reset</Button></Box>
+    startPauseResumeToggle = <Box m={2}><Button className='startButton' variant="contained" color="primary" onClick={startHandler}>Start</Button></Box>
+  }
+
   return (
     <div className='optionContainer'>
       <div className='buttonsContainer'>
-        <Box m={2}>
+        {startPauseResumeToggle}
+        {resetStopToggle}
+        {/* <Box m={2}>
           <Button
             className='startButton'
             variant="contained"
@@ -175,10 +214,10 @@ export const OptionContainer: FC<any> = (props:any) => {
             className='resetButton'
             variant="contained"
             color="secondary"
-            onClick={endHandler}
+            onClick={stopHandler}
             >Reset
           </Button>
-        </Box>
+        </Box> */}
         <Box m={2}>
           <Button
             className='optionButton'
