@@ -18,6 +18,7 @@ const About: FC = () => {
     container: {
       display: 'flex',
       flexDirection: 'row',
+      flexWrap: 'wrap',
       justifyContent: 'space-evenly',
       alignItems: 'center',
     },
