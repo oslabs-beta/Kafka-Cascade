@@ -92,18 +92,30 @@ class CascadeService extends EventEmitter {
    * @returns {Promise}
    */
   disconnect():Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        await this.producer.stop();
-        await this.producer.disconnect();
-        await this.consumer.disconnect();
-        resolve(true);
-        this.emit('disconnect');
-      }
-      catch(error) {
-        reject(error);
-        this.emit('error', 'Error in cascade.disconnect(): ' + error);
-      }
+    return new Promise((resolve, reject) => {
+      this.producer.stop()
+        .then(() => {
+          this.producer.disconnect()
+            .then(() => {
+                this.consumer.disconnect()
+                  .then(() => {
+                    resolve(true);
+                    this.emit('disconnect');
+                  })
+                  .catch(error => {
+                    reject(error);
+                    this.emit('error', 'Error in cascade.disconnect(): [CONSUMER]' + error);
+                  });
+            })
+            .catch(error => {
+              reject(error);
+              this.emit('error', 'Error in cascade.disconnect(): [PRODUCER:DISCONNECT]' + error);
+            });
+        })
+        .catch(error => {
+          reject(error);
+          this.emit('error', 'Error in cascade.disconnect(): [PRODUCER:STOP]' + error);
+        });
     });  
   }
 
