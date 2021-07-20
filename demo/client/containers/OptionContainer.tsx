@@ -54,11 +54,14 @@ export const OptionContainer: FC<any> = (props:any) => {
   //used by start button, initilize the options to the backend
   const startHandler = () => {
     if(!isStarted){
+      setRetryOptionToggle(false);
       let options: any;
       if(retryType.fastRetry) options = {};
       //TODO: CHANGE DATA PASSED TO THE CREATED ARRAYS
-      else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
-      else options = {batchLimit: [6,6,6,6,6,6]}
+      // else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
+      // else options = {batchLimit: [6,6,6,6,6,6]}
+      else if(retryType.timeout) options = {timeoutLimit: timeoutLimitArray};
+      else options = {batchLimit: batchLimitArray}
       socket.sendEvent('start', {retries: numberOfRetries, options});
       setIsStarted(true);
     }
@@ -114,23 +117,22 @@ export const OptionContainer: FC<any> = (props:any) => {
   //updates the number of retrys
   const updateNumberOfRetriesHandler = (event) => {
     //prevents user from making change after starting the demo
-    if(isStarted){ 
-      event.target.value = event.target.defaultValue;
-      return
-    };
-
     let value = event.target.value;
-    if(value >= 0 && value <= retryLevelLIMIT)
-    setNumberOfRetries(event.target.value);
-    console.log(numberOfRetries);
-    if(timeoutLimitArray.length > value){
-      setTimeoutLimitArray(timeoutLimitArray.slice(0,value))
-      setBatchLimitArray(batchLimitArray.slice(0,value))
+    if(isStarted || value < 0 || value > retryLevelLIMIT || value === '-'){ 
+      event.target.value = event.target.defaultValue;
     }
-    else{
-      for(let i = timeoutLimitArray.length; i < value; i++){
-        timeoutLimitArray.push(5);
-        batchLimitArray.push(5);
+    else {
+      event.target.defaultValue = value;
+      setNumberOfRetries(event.target.value);
+      if(timeoutLimitArray.length > value){
+        setTimeoutLimitArray(timeoutLimitArray.slice(0,value))
+        setBatchLimitArray(batchLimitArray.slice(0,value))
+      }
+      else{
+        for(let i = timeoutLimitArray.length; i < value; i++){
+          timeoutLimitArray.push(1000);
+          batchLimitArray.push(1);
+        }
       }
     }
   }
@@ -138,16 +140,18 @@ export const OptionContainer: FC<any> = (props:any) => {
   //updates the value of a retry level from the option menu
   const updateLimitArrayHandler = (event, index) => {
     //prevents user from making change after starting the demo
-    if(isStarted){
+    let value = event.target.value;
+    if(isStarted || value < 0 || value === '-'){
       event.target.value = event.target.defaultValue;
       return;
-    }
-
-    if(retryType.timeout){
-      setTimeoutLimitArray(() => {let copy = timeoutLimitArray; copy[index] = parseInt(event.target.value); return copy})
-    }
-    if(retryType.batching) {
-      setBatchLimitArray(() => {let copy = batchLimitArray; copy[index] = parseInt(event.target.value); return copy})
+    } else if(value > 0){
+      event.target.defaultValue = event.target.value;
+      if(retryType.timeout){
+        setTimeoutLimitArray(() => {let copy = timeoutLimitArray; copy[index] = parseInt(event.target.value); return copy})
+      }
+      if(retryType.batching) {
+        setBatchLimitArray(() => {let copy = batchLimitArray; copy[index] = parseInt(event.target.value); return copy})
+      }
     }
   }
 
