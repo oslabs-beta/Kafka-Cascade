@@ -1,5 +1,6 @@
 const ws = require("nodejs-websocket");
 
+const PORT = process.env.WEBSOCKET_PORT;
 const routes = [];
 
 const socket = {
@@ -47,7 +48,7 @@ const socket = {
         console.log(`Errr on connection '${conn.key}': ${err}`);
       });
     })
-    .listen(4000),
+    .listen(PORT),
 
   use: (start:string, ...stops) => {
     routes.push({ start, stops });
@@ -61,7 +62,7 @@ const socket = {
 };
 
 socket.server.on("listening", () => {
-  console.log("Websocket server listnening on port 4000...");
+  console.log(`Websocket server listnening on port ${PORT}...`);
 });
 
 socket.server.on("connection", (conn) => {

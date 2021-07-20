@@ -48,13 +48,11 @@ services:
       - app-tier
 
   cascade:
-    image: kafkacascade/demo-prod:latest
+    image: kafkacascade/demo:latest
     depends_on: 
       - kafka
     ports:
       - 3000:3000
       - 4000:4000
-    environment: 
-      KAFKA_ADDRESS: kafka
     networks: 
       - app-tier
