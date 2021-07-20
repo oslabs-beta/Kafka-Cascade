@@ -52,7 +52,7 @@ services:
     depends_on: 
       - kafka
     ports:
-      - 3000:3000
-      - 4000:4000
+      - 80:80
+      - 81:81
     networks: 
       - app-tier
