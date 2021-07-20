@@ -1,4 +1,11 @@
+import { resolve } from '../demo/webpack.config';
 import * as Types from '../kafka-cascade/src/kafkaInterface';
+
+var testFn:any;
+if(process.env.NODE_ENV === 'production') {
+  testFn = (callback:any) => function(...args) { return callback(...args); };
+}
+else testFn = jest.fn;
 
 class TestKafka {
   subscribers: any[];
@@ -8,10 +15,10 @@ class TestKafka {
 
   constructor() {
     this.subscribers = [];
-    //used for jest.fn() to test param types, number of times function was called
-    this.consumer = jest.fn(() => new TestConsumer(this));
-    this.producer = jest.fn(() => new TestProducer(this));
-    this.admin = jest.fn(() => new TestAdmin());
+    //used for testFn to test param types, number of times function was called
+    this.consumer = testFn(() => new TestConsumer(this));
+    this.producer = testFn(() => new TestProducer(this));
+    this.admin = testFn(() => new TestAdmin());
   }
 }
 
@@ -26,30 +33,30 @@ class TestConsumer {
   paused:boolean = false;
 
   constructor(kafka: TestKafka) {
-    this.connect = jest.fn(() => {
+    this.connect = testFn(() => {
       return new Promise((resolve) => resolve(true));
     });
-    this.disconnect = jest.fn(() => {
+    this.disconnect = testFn(() => {
       return new Promise((resolve) => resolve(true));
     });
-    this.subscribe = jest.fn((sub) => {
+    this.subscribe = testFn((sub) => {
       kafka.subscribers.push({topic: sub.topic, consumer:this });
       return new Promise((resolve) => resolve(true));
     });
-    this.run = jest.fn(options => {
+    this.run = testFn(options => {
       kafka.subscribers.forEach(c => {
         if(c.consumer === this) c.eachMessage = options.eachMessage;
       });
       return new Promise((resolve) => resolve(true));
     });
-    this.stop = jest.fn(() => {
+    this.stop = testFn(() => {
       return new Promise((resolve) => resolve(true));
     });
-    this.pause = jest.fn(() => {
+    this.pause = testFn(() => {
       this.paused = true;
       return new Promise((resolve) => resolve(true));
     });
-    this.resume = jest.fn(() => {
+    this.resume = testFn(() => {
       this.paused = false;
       return new Promise((resolve) => resolve(true));
     });
@@ -65,16 +72,16 @@ class TestProducer {
     //details and count used to create an hashtable
 
   constructor(kafka: TestKafka) {
-    this.connect = jest.fn(() => {
+    this.connect = testFn(() => {
       return new Promise((resolve) => resolve(true));
     });
-    this.disconnect = jest.fn(() => {
+    this.disconnect = testFn(() => {
       return new Promise((resolve) => resolve(true));
     });
     this.offsets = {};
 
     //defines the send function
-    this.send = jest.fn((msg: Types.KafkaProducerMessageInterface) => {
+    this.send = testFn((msg: Types.KafkaProducerMessageInterface) => {
       try {
         msg.messages.forEach(m => {
           //check if sent for the given topic
@@ -109,26 +116,29 @@ class TestProducer {
 }
 
 class TestAdmin {
-  connect: any = jest.fn(() => {
+  connect: any = testFn(() => {
     return new Promise((resolve) => resolve(true));
   });
-  disconnect:any = jest.fn(() => {
+  disconnect:any = testFn(() => {
     return new Promise((resolve) => resolve(true));
   });;
-  listTopics:any = jest.fn(() => {
+  listTopics:any = testFn(() => {
     return new Promise((resolve) => resolve(['test-topic']));
   });
-  createTopics:any = jest.fn(() => {
+  createTopics:any = testFn(() => {
+    return new Promise((resolve) => resolve(true));
+  });
+  deleteTopics:any = testFn(() => {
     return new Promise((resolve) => resolve(true));
   });
 }
 
-test('Can create a test kafka object', () => {
+if(process.env.NODE_ENV !== 'production') test('Can create a test kafka object', () => {
   const kafka = new TestKafka();
   const producer = kafka.producer();
   const consumer = kafka.consumer();
   consumer.subscribe({topic: 'test-topic'});
-  consumer.run({eachMessage:jest.fn()});
+  consumer.run({eachMessage:testFn()});
 
   expect(Object.keys(producer.offsets)).toHaveLength(0);
   expect(kafka.subscribers).toHaveLength(1);

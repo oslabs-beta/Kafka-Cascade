@@ -21,6 +21,7 @@ interface AdminInterface {
   disconnect: () => Promise<any>;
   listTopics: () => Promise<string[]>;
   createTopics: (arg: {validateOnly?:boolean, waitForLeaders?:boolean, timeout?:number, topics:{topic:string, numPartitions?:number}[]}) => Promise<any>; 
+  deleteTopics: (arg: {topics: string[]}) => any;
 }
 
 interface KafkaInterface {

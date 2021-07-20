@@ -1,9 +1,14 @@
- const { Kafka } = require('kafkajs');
+const { Kafka } = require('kafkajs');
 const cascade = require('../../../kafka-cascade/index');
 import * as Cascade from '../../../kafka-cascade/index';
 import socket from '../websocket';
+import { TestKafka } from '../../../__tests__/cascade.mockclient.test'
 
-const kafka = new Kafka({
+var kafka: Cascade.Types.KafkaInterface;
+if(process.env.DEMO === 'true') {
+  kafka = new TestKafka();
+}
+else kafka = new Kafka({
   clientId: 'kafka-demo',
   brokers: [process.env.KAFKA_ADDRESS + ':29092'],
 });
