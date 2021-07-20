@@ -68,15 +68,13 @@ const stopService = async () => {
 }
 
 const pauseService = async() => {
-  if(!service.paused){
-    // await producer.pause();
+  if(!service.paused()){
     await service.pause();
   }
 }
 
 const resumeService = async() => {
-  if(service.paused){
-    // await producer.resume();
+  if(service.paused()){
     await service.resume();
   }
 }
