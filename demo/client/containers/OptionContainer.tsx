@@ -189,12 +189,13 @@ export const OptionContainer: FC<any> = (props:any) => {
     retryOptionContainer = (
       <div className="retryOptionContainer">
         <div>
-          <div className='numberOfRetriesContainer'>
+          <Box className='numberOfRetriesContainer' m={2}>
             <TextField
               className='textField'
               id="filled-number"
               label="Number of Retries"
               type="number"
+              variant="outlined"
               fullWidth={true}
               InputLabelProps={{
                 shrink: true,
@@ -204,7 +205,7 @@ export const OptionContainer: FC<any> = (props:any) => {
               onChange={updateNumberOfRetriesHandler}
               // onKeyPress = {(event) => {if(event.target.value > retryLevelLIMIT) event.target.blur()}}
             />
-          </div>
+          </Box>
           <RadioButtonGroup retryType={retryType} setRetryType={setRetryType} handleChange={handleChange}/>
         </div>
         <div className='frameContainer'>
@@ -241,7 +242,7 @@ export const OptionContainer: FC<any> = (props:any) => {
             variant="contained"
             color="secondary"
             onClick={toggleRetryOptionContainer}
-            >Option
+            >Options
           </Button>
         </Box>
         {/* <div className='spacer'></div> */}

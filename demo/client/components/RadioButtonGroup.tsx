@@ -5,6 +5,7 @@ import {
   FormControlLabel,
   FormControl,
   FormLabel,
+  Typography,
 } from "@material-ui/core";
 
 interface RadioButtonGroupProps {
@@ -19,25 +20,9 @@ interface RadioButtonGroupState {
   },
 }
 
-// import socket from '../socket';
-
-// socket.sendEvent('start', {})
-
 export const RadioButtonGroup: FC<any> = (props:any) => {
 
   const {retryType, setRetryType, handleChange} = props;
-
-  // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-
-  //   let newRetryType = {...retryType};
-  //   newRetryType = {
-  //     fastRetry: false,
-  //     timeout: false,
-  //     batching: false,
-  //   }
-  //   newRetryType[(event.target as HTMLInputElement).value] = true;
-  //   setRetryType(newRetryType);
-  // };
 
   let buttonValue = '';
 
@@ -49,7 +34,9 @@ export const RadioButtonGroup: FC<any> = (props:any) => {
     <div className='radioGroup'>
       <FormControl component="fieldset">
         <FormLabel component="legend"></FormLabel>
-        Retry Strategy
+        <Typography color="textPrimary" gutterBottom>
+          Retry Strategy
+        </Typography>
         <RadioGroup
           aria-label="Retry Strategy"
           name="retryStrategy"

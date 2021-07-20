@@ -24,6 +24,7 @@ const About: FC = () => {
     root: {
       backgroundColor: 'rgba(225, 218, 232)',
       padding: '1rem 1rem 1rem 1rem',
+      margin: '5px',
       minWidth: 'md',
     },
   }));
