@@ -56,9 +56,11 @@ class CascadeProducer extends EventEmitter {
   stop(): Promise<any> {
     // send all pending messages to DLQ
     for(let id in this.sendStorage) {
-      let {msg} = this.sendStorage[id];
-      delete this.sendStorage[id];
-      this.dlqCB(msg);
+      if(this.sendStorage[id]) {
+        let {msg} = this.sendStorage[id];
+        this.sendStorage[id] = undefined;
+        this.dlqCB(msg);
+      }
     }
     
     this.routes.forEach(route => {
@@ -147,7 +149,7 @@ class CascadeProducer extends EventEmitter {
       const scheduler = () => {
         if(this.sendStorage[id]){
           const {sending} = this.sendStorage[id];
-          delete this.sendStorage[id];
+          this.sendStorage[id] = undefined;
           sending();
         }
       }
