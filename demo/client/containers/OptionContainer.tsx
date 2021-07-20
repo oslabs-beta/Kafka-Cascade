@@ -54,11 +54,14 @@ export const OptionContainer: FC<any> = (props:any) => {
   //used by start button, initilize the options to the backend
   const startHandler = () => {
     if(!isStarted){
+      setRetryOptionToggle(false);
       let options: any;
       if(retryType.fastRetry) options = {};
       //TODO: CHANGE DATA PASSED TO THE CREATED ARRAYS
-      else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
-      else options = {batchLimit: [6,6,6,6,6,6]}
+      // else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
+      // else options = {batchLimit: [6,6,6,6,6,6]}
+      else if(retryType.timeout) options = {timeoutLimit: timeoutLimitArray};
+      else options = {batchLimit: batchLimitArray}
       socket.sendEvent('start', {retries: numberOfRetries, options});
       setIsStarted(true);
     }

@@ -53,6 +53,20 @@ const stopService = async () => {
   service = null;
 }
 
+const pauseService = async() => {
+  if(!service.paused){
+    // await producer.pause();
+    await service.pause();
+  }
+}
+
+const resumeService = async() => {
+  if(service.paused){
+    // await producer.resume();
+    await service.resume();
+  }
+}
+
 // start express controller
 const cascadeController:any = {};
 
@@ -113,6 +127,32 @@ cascadeController.stopService = async (req, res, next) => {
   }
 };
 
+cascadeController.pauseService = async (req, res, next) => {
+  try{
+    pauseService();
+    return next();
+  } catch(error) {
+    return next({
+      log: 'Error in cascadeController.pauseService: ' + error,
+      message: 'Error in cascadeController.pauseService, check the log',
+    });
+  }
+}
+
+cascadeController.resumeService = async (req, res, next) => {
+  try{
+    resumeService();
+    return next();
+  } catch(error) {
+    return next({
+      log: 'Error in cascadeController.resumeService: ' + error,
+      message: 'Error in cascadeController.resumeService, check the log',
+    });
+  }
+}
+
+
+
 // end express controller
 export default cascadeController;
 
@@ -159,6 +199,20 @@ socket.use('stop', (req, res) => {
     levelCounts = [];
   }
 });
+
+socket.use('pause', (req, res) => {
+  console.log('Received pause request');
+  if(service) {
+    pauseService();
+  }
+})
+
+socket.use('resume', (req, res) => {
+  console.log('Received resume request');
+  if(service){
+    resumeService();
+  }
+})
 
 socket.use('close', async (req, res) => {
   console.log('Closed connection with:', res.conn.key);
