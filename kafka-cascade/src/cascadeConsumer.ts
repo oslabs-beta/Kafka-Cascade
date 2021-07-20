@@ -1,4 +1,3 @@
-const { Kafka } = require('kafkajs');
 const EventEmitter = require('events');
 import * as Types from './kafkaInterface';
 
