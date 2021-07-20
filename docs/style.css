@@ -1,0 +1,33 @@
+.top-nav {
+  background-color: #440057;
+}
+
+.navbar-item {
+  color: white;
+}
+
+.top-nav .menu .navigation .link {
+  color: white;
+}
+
+.navigation h1 {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+
+.sidebar {
+  background-color: rgba(225, 218, 232);
+}
+
+.side-nav {
+  background-color: rgba(225, 218, 232);
+}
+
+.logo {
+  display: flex;
+  width: 400px;
+}
+
+.logo .image {
+  height:50px;
+  width:46px;
+}

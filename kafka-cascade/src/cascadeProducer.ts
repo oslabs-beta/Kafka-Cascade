@@ -228,7 +228,7 @@ class CascadeProducer extends EventEmitter {
         }, 10);
       }
       catch(error) {
-        this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+        this.emit('error', 'Error in cascade.setDefaultRoute(): ' + error);
         reject(error);
       }
     });
@@ -278,7 +278,7 @@ class CascadeProducer extends EventEmitter {
         }, 10);
       }
       catch(error) {
-        this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+        this.emit('error', 'Error in cascade.setRoute(): ' + error);
         reject(error);
       }
     });

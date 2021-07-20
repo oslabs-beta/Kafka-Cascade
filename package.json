@@ -4,7 +4,7 @@
   "description": "DLQ handling for KafkaJS",
   "main": "./dist/index.js",
   "scripts": {
-    "start": "",
+    "start": "cd demo; npm start",
     "build": "tsc",
     "dev": "nodemon ./dist/test.js",
     "test": "jest --verbose",

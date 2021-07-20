@@ -1,9 +1,8 @@
 import React, { FC } from 'react';
 import {
-  Container, Typography, Divider, makeStyles,
-  createStyles, Button, Theme, FormHelperText,
+  Container, Typography, makeStyles,
+  createStyles, Button, Card, CardContent,
 } from '@material-ui/core';
-import { shadows } from '@material-ui/system';
 
 const GettingStarted: FC = () => {
 
@@ -31,8 +30,13 @@ const GettingStarted: FC = () => {
       backgroundColor: 'rgba(225, 218, 232)',
       paddingTop: '2vh',
       paddingBottom: '2vh',
-      width: '75%',
-    }
+      width: '80%',
+    },
+    root: {
+      backgroundColor: 'rgba(211,211,211)',
+      margin: '5px',
+      minWidth: 'md',
+    },
   }))
 
   const classes = useStyles();
@@ -52,6 +56,12 @@ const GettingStarted: FC = () => {
             Install the Kafka-Cascade library from npm to add message retry
             handling to your KafkaJS project
         </Typography>
+        <br />
+        <Card className={classes.root}>
+          <CardContent>
+            <code>{'npm install kafka-cascade'}</code>
+          </CardContent>
+        </Card>
         <Container className={classes.buttonsContainer}>
           <Button
               className={classes.button}
@@ -67,6 +77,7 @@ const GettingStarted: FC = () => {
               variant="contained"
               color="primary"
               target="_blank"
+              style={{textTransform: 'lowercase'}}
               href="https://www.npmjs.com/package/kafka-cascade"
             >
               npm
