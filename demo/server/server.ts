@@ -1,9 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 import cascadeController from './controllers/cascadeController';
 const path = require ('path');
 const favicon = require('serve-favicon');
 
-const PORT = 3000;
+const PORT = process.env.APP_PORT;
 const app = express();
 
 app.use(express.json());
