@@ -1,4 +1,3 @@
-import { resolve } from '../demo/webpack.config';
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 
 var testFn:any;
