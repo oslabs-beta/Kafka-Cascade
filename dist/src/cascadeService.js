@@ -86,19 +86,31 @@ class CascadeService extends EventEmitter {
      * @returns {Promise}
      */
     disconnect() {
-        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield this.producer.stop();
-                yield this.producer.disconnect();
-                yield this.consumer.disconnect();
-                resolve(true);
-                this.emit('disconnect');
-            }
-            catch (error) {
+        return new Promise((resolve, reject) => {
+            this.producer.stop()
+                .then(() => {
+                this.producer.disconnect()
+                    .then(() => {
+                    this.consumer.disconnect()
+                        .then(() => {
+                        resolve(true);
+                        this.emit('disconnect');
+                    })
+                        .catch(error => {
+                        reject(error);
+                        this.emit('error', 'Error in cascade.disconnect(): [CONSUMER]' + error);
+                    });
+                })
+                    .catch(error => {
+                    reject(error);
+                    this.emit('error', 'Error in cascade.disconnect(): [PRODUCER:DISCONNECT]' + error);
+                });
+            })
+                .catch(error => {
                 reject(error);
-                this.emit('error', 'Error in cascade.disconnect(): ' + error);
-            }
-        }));
+                this.emit('error', 'Error in cascade.disconnect(): [PRODUCER:STOP]' + error);
+            });
+        });
     }
     /**
      * Sets the parameters for the default retry route or when an unknown status is provided when the service rejects the message.
@@ -203,6 +215,7 @@ class CascadeService extends EventEmitter {
                     try {
                         yield this.consumer.pause();
                         this.producer.pause();
+                        console.log('cascade.pause() called ', this.producer.paused);
                         resolve(true);
                         this.emit('pause');
                     }

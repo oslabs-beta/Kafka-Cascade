@@ -34,6 +34,7 @@ class CascadeProducer extends EventEmitter {
     }
     pause() {
         this.paused = true;
+        console.log(this.paused);
     }
     resume() {
         this.paused = false;
@@ -50,9 +51,11 @@ class CascadeProducer extends EventEmitter {
     stop() {
         // send all pending messages to DLQ
         for (let id in this.sendStorage) {
-            let { msg } = this.sendStorage[id];
-            delete this.sendStorage[id];
-            this.dlqCB(msg);
+            if (this.sendStorage[id]) {
+                let { msg } = this.sendStorage[id];
+                this.sendStorage[id] = undefined;
+                this.dlqCB(msg);
+            }
         }
         this.routes.forEach(route => {
             route.levels.forEach((level, i) => {
@@ -136,7 +139,7 @@ class CascadeProducer extends EventEmitter {
             const scheduler = () => {
                 if (this.sendStorage[id]) {
                     const { sending } = this.sendStorage[id];
-                    delete this.sendStorage[id];
+                    this.sendStorage[id] = undefined;
                     sending();
                 }
             };
@@ -217,7 +220,7 @@ class CascadeProducer extends EventEmitter {
                 }, 10);
             }
             catch (error) {
-                this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+                this.emit('error', 'Error in cascade.setDefaultRoute(): ' + error);
                 reject(error);
             }
         }));
@@ -263,7 +266,7 @@ class CascadeProducer extends EventEmitter {
                 }, 10);
             }
             catch (error) {
-                this.emit('error', 'Error in cascade.setDefaultLevels(): ' + error);
+                this.emit('error', 'Error in cascade.setRoute(): ' + error);
                 reject(error);
             }
         }));
