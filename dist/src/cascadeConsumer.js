@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const { Kafka } = require('kafkajs');
 const EventEmitter = require('events');
 class CascadeConsumer extends EventEmitter {
     //constructor

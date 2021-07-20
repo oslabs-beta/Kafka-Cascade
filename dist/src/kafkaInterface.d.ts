@@ -30,6 +30,9 @@ interface AdminInterface {
             numPartitions?: number;
         }[];
     }) => Promise<any>;
+    deleteTopics: (arg: {
+        topics: string[];
+    }) => any;
 }
 interface KafkaInterface {
     producer: () => ProducerInterface;

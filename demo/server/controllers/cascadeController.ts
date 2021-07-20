@@ -13,46 +13,64 @@ else kafka = new Kafka({
   brokers: [process.env.KAFKA_ADDRESS + ':29092'],
 });
 
-const producer = kafka.producer();  
-
-let topic = 'demo-topic';
-const groupId = 'test-group';
-
-const retryLevels = 5;
-var levelCounts;
+const users: { [index: string]: { 
+  retryLevels:number, 
+  levelCounts:number[], 
+  topic:string, 
+  producer:Cascade.Types.ProducerInterface,
+  service:Cascade.CascadeService,
+  messageRate:number,
+} } = {};
 
 // serviceCB simulates a realworld service by using the success value of the message to resolve or reject
 const serviceCB:Cascade.Types.ServiceCallback = (msg, resolve, reject) => {
   const message = JSON.parse(msg.message.value);
-  
+  const metadata = cascade.getMetadata(msg);
+  if(!users[message.key] || metadata.retries > users[message.key].retryLevels) return; //This is necessary, I don't know why
+
   if(Math.random() < message.success) resolve(msg);
   else reject(msg);
 };
 
 
 const successCB:Cascade.Types.RouteCallback = (msg) => {
+  const message = JSON.parse(msg.message.value);
   const metadata = cascade.getMetadata(msg);
-  levelCounts[metadata.retries]++;
+  if(users[message.key])
+    users[message.key].levelCounts[metadata.retries]++;
 };
 const dlqCB:Cascade.Types.RouteCallback = (msg) => {
-  levelCounts[levelCounts.length - 1]++;
+  const message = JSON.parse(msg.message.value);
+  const user = users[message.key];
+  if(users[message.key])
+    user.levelCounts[user.levelCounts.length - 1]++;
 };
 
 var service: Cascade.CascadeService;
 
-const startService = (options?: {timeoutLimit?:number[], batchLimit?:number[]}):Promise<any> => {
+const startService = (key:string, retryLevels:number, options?: {timeoutLimit?:number[], batchLimit?:number[]}):Promise<any> => {
   return new Promise(async (resolve, reject) => {
     try {
-      levelCounts = (new Array(retryLevels+1)).fill(0);
-      service = await cascade.service(kafka, topic, groupId, serviceCB, successCB, dlqCB);
-      service.on('error', (error) => console.log(error));
-      await service.setDefaultRoute(retryLevels, options);
+      const user = { 
+        retryLevels, 
+        levelCounts: (new Array(retryLevels+2)).fill(0), 
+        topic: 'test-topic-' + key,
+        producer: kafka.producer(),
+        service: null,
+        messageRate: 1,
+      }
+      users[key] = user;
+      user.service = await cascade.service(kafka, user.topic, 'test-group-' + key, serviceCB, successCB, dlqCB);
+      user.service.on('serviceError', (error) => console.log(error));
+      user.service.on('error', (error) => console.log(error));
+      user.service.on('error', (error) => console.log(error));
+      await user.service.setDefaultRoute(retryLevels, options);
       
-      await service.connect();
-      await producer.connect();
-      console.log('Connected to Kafka server...');
-      await service.run();
-      console.log('Listening to Kafka server...');
+      await user.service.connect();
+      await user.producer.connect();
+      console.log(`Connected ${key} to Kafka server...`);
+      await user.service.run();
+      console.log(`${key} listening to Kafka server...`);
       resolve(true);
     }
     catch(error) {
@@ -61,23 +79,28 @@ const startService = (options?: {timeoutLimit?:number[], batchLimit?:number[]}):
   });
 }
 
-const stopService = async () => {
-  await producer.disconnect();
-  await service.disconnect();
-  service = null;
+const stopService = async (key:string) => {
+  try {
+    await users[key].producer.disconnect();
+    await users[key].service.disconnect();
+  }
+  catch(error) {
+    console.log(error);
+  }
+  users[key] = undefined;
 }
 
-const pauseService = async() => {
-  if(!service.paused){
+const pauseService = async(key:string) => {
+  if(!users[key].service.paused){
     // await producer.pause();
-    await service.pause();
+    await users[key].service.pause();
   }
 }
 
-const resumeService = async() => {
-  if(service.paused){
+const resumeService = async(key:string) => {
+  if(users[key].service.paused){
     // await producer.resume();
-    await service.resume();
+    await users[key].service.resume();
   }
 }
 
@@ -86,7 +109,7 @@ const cascadeController:any = {};
 
 cascadeController.startService = async (req: {query: {retries:string}}, res, next) => {
   try {
-    startService();
+    startService('postman', 5);
 
     // what do we send back?
     res.locals.confirmation = 'Cascade service is connecting to Kafka server...';
@@ -109,8 +132,8 @@ cascadeController.sendMessage = async (req, res, next) => {
     // check to see if server is running
 
     // send message
-    await producer.send({
-      topic,
+    await users['postman'].producer.send({
+      topic: users['postman'].topic,
       messages: [
         {
           value: JSON.stringify(res.locals),
@@ -130,7 +153,7 @@ cascadeController.sendMessage = async (req, res, next) => {
 
 cascadeController.stopService = async (req, res, next) => {
   try {
-    stopService();
+    stopService('postman');
     return next();
   }
   catch(error) {
@@ -143,7 +166,7 @@ cascadeController.stopService = async (req, res, next) => {
 
 cascadeController.pauseService = async (req, res, next) => {
   try{
-    pauseService();
+    await pauseService('postman');
     return next();
   } catch(error) {
     return next({
@@ -155,7 +178,7 @@ cascadeController.pauseService = async (req, res, next) => {
 
 cascadeController.resumeService = async (req, res, next) => {
   try{
-    resumeService();
+    resumeService('postman');
     return next();
   } catch(error) {
     return next({
@@ -172,37 +195,29 @@ export default cascadeController;
 
 
 // start websocket functionality
-var messageRate = 1;
-var runningMessages = false;
-const sendMessageContinuous = async () => {
-  if(runningMessages && service) {
-    producer.send({
-      topic,
+const sendMessageContinuous = async (key:string ) => {
+  if(!users[key]) return;
+
+  if(!users[key].service.paused()) {
+    users[key].producer.send({
+      topic: users[key].topic,
       messages: [{
-          value: JSON.stringify({success: 0.3}),
+          value: JSON.stringify({success: 0.3, key}),
       }],
     })
     .catch(error => console.log('Error in sendMessageContinuous:', error));
   }
-  setTimeout(sendMessageContinuous, Math.round(1/messageRate * 1000));
+
+  setTimeout(() => sendMessageContinuous(key), Math.round(1/users[key].messageRate * 1000));
 };
-
-// const bellCurvePropability = (max) => {
-//   const sech = (x:number) => 2 / (Math.exp(x) - Math.exp(-x));
-//   return Math.abs(((Math.random()*3-1.5)) * max);
-// }
-
-// const linearPropability = (max) => {
-//   return Math.random() * max;
-// }
 
 socket.use('start', async (req, res) => {
   try {
-    console.log('Received start request');
+    console.log(`Received start request from ${res.conn.key}`);
+    console.log(req);
     if(!service) {
-      await startService(req.options);
-      runningMessages = true;
-      sendMessageContinuous();
+      await startService(res.conn.key, req.retries, req.options);
+      sendMessageContinuous(res.conn.key);
     }
   }
   catch(error) {
@@ -211,30 +226,30 @@ socket.use('start', async (req, res) => {
 });
 
 socket.use('stop', (req, res) => {
-  console.log('Received stop request');
-  if(service) {
-    stopService();
-    runningMessages = false;
-    levelCounts = [];
+  console.log(`Received stop request from ${res.conn.key}`);
+  if(users[res.conn.key]) {
+    stopService(res.conn.key);
   }
 });
 
 socket.use('pause', (req, res) => {
-  console.log('Received pause request');
+  console.log(`Received pause request from ${res.conn.key}`);
   if(service) {
-    pauseService();
+    pauseService(res.conn.key);
   }
 })
 
 socket.use('resume', (req, res) => {
-  console.log('Received resume request');
+  console.log(`Received resume request from ${res.conn.key}`);
   if(service){
-    resumeService();
+    resumeService(res.conn.key);
   }
 })
 
 socket.use('close', async (req, res) => {
+  if(users[res.conn.key]) stopService(res.conn.key); 
   console.log('Closed connection with:', res.conn.key);
+
   try {
     if(socket.server.connections.length === 0) {
       console.log('There are no active connections, cleaning up space...');
@@ -254,16 +269,28 @@ socket.use('close', async (req, res) => {
 });
 
 socket.use('set_rate', (req, res) => {
-  messageRate = req.rate;
+  users[res.conn.key].messageRate = req.rate;
 });
 
 const heartbeat = () => {
-  if(service) {
-    socket.send('heartbeat', {
-      levelCounts,
-    });
+  for(let conn in socket.server.connections) {
+    const c = socket.server.connections[conn];
+    let levelCounts:number[] = [];
+    if(users[c.key]) {
+      if(users[c.key].retryLevels + 2 !== users[c.key].levelCounts.length) {
+        console.log(users[c.key].retryLevels + 2, ':', users[c.key].levelCounts.length);
+      }
+      levelCounts = users[c.key].levelCounts;
+    }
 
+    c.send(JSON.stringify({
+      type: 'heartbeat', 
+      payload: {
+        levelCounts,
+      }
+    }));
   }
+
   setTimeout(heartbeat, 100);
 };
 heartbeat();
