@@ -90,6 +90,17 @@ const stopService = async (key:string) => {
   users[key] = undefined;
 }
 
+<<<<<<< HEAD
+const pauseService = async() => {
+  if(!service.paused()){
+    await service.pause();
+  }
+}
+
+const resumeService = async() => {
+  if(service.paused()){
+    await service.resume();
+=======
 const pauseService = async(key:string) => {
   if(!users[key].service.paused){
     // await producer.pause();
@@ -101,6 +112,7 @@ const resumeService = async(key:string) => {
   if(users[key].service.paused){
     // await producer.resume();
     await users[key].service.resume();
+>>>>>>> 103a0b5fd14857c9e582fb97d8f864d902bb0316
   }
 }
 

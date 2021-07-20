@@ -223,13 +223,13 @@ class CascadeService extends EventEmitter {
    * @returns {Promise}
    */
   async pause():Promise<any> {
+    console.log('hello');
     // check to see if service is already paused
     if (!this.producer.paused) {
       return new Promise (async (resolve, reject) => {
         try {
           await this.consumer.pause();
           this.producer.pause();
-          console.log('cascade.pause() called ',this.producer.paused);
           resolve(true);
           this.emit('pause');
         } catch (error) {
