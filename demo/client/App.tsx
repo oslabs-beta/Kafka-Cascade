@@ -78,50 +78,51 @@ export const App: FC<AppProps> = () => {
   else {
     const classes = useStyles();
     return (
-  <ThemeProvider theme={theme}>    
-    <Container className="app" maxWidth="lg">
-      <NavBar />
-      <Container className={classes.landing} component={Element} name="landing">
-        <Typography
-          variant="h2"
-          align="center"
-          color="textPrimary"
-          gutterBottom
-        >
-          Kafka Cascade
-        </Typography>
-        <Typography
-          variant="h4"
-          align="center"
-          color="textSecondary"
-          gutterBottom
-        >
-          Message Reprocessing Library for KafkaJS
-        </Typography>
-      </Container>
-      <Container className={classes.container} component={Element} name="features">
-        <FeaturesContainer/>
-      </Container>
-      <Container className={classes.container} component={Element} name="getting started">
-        <GettingStartedContainer/>
-      </Container>
-      <Container className={classes.container} component={Element} name="web demo">
-        <Typography
-          variant="h3"
-          align="center"
-          color="textPrimary"
-          gutterBottom
-        >
-          Web Demo
-        </Typography>
-        <OptionContainer />
-        <CascadeChart />
-      </Container>
-      <Container className={classes.container} component={Element} name="about">
-        <AboutContainer/>
-      </Container>
-    </Container>
-  </ThemeProvider>
+      <ThemeProvider theme={theme}>    
+        <Container className="app" maxWidth="lg">
+          <NavBar />
+          <Container className={classes.landing} component={Element} name="landing">
+            <Typography
+              variant="h2"
+              align="center"
+              color="textPrimary"
+              gutterBottom
+            >
+              Kafka Cascade
+            </Typography>
+            <img alt="kafka-cascade-logo" style={{ paddingBottom: '3vh' }} src="favIconLarger.png" />
+            <Typography
+              variant="h4"
+              align="center"
+              color="textSecondary"
+              gutterBottom
+            >
+              Message Reprocessing Library for KafkaJS
+            </Typography>
+          </Container>
+          <Container className={classes.container} component={Element} name="features">
+            <FeaturesContainer/>
+          </Container>
+          <Container className={classes.container} component={Element} name="getting started">
+            <GettingStartedContainer/>
+          </Container>
+          <Container className={classes.container} component={Element} name="web demo">
+            <Typography
+              variant="h3"
+              align="center"
+              color="textPrimary"
+              gutterBottom
+            >
+              Web Demo
+            </Typography>
+            <OptionContainer />
+            <CascadeChart />
+          </Container>
+          <Container className={classes.container} component={Element} name="about">
+            <AboutContainer/>
+          </Container>
+        </Container>
+      </ThemeProvider>
   );
   }
 }

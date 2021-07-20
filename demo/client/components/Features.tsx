@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import {
-    Container, Typography, Divider, makeStyles,
-    createStyles, Button, Theme, FormHelperText, ThemeProvider,
+    Container, Typography, makeStyles, createStyles,
   } from '@material-ui/core';
 import FastForwardIcon from '@material-ui/icons/FastForward';
 import TimerIcon from '@material-ui/icons/Timer';
@@ -32,7 +31,7 @@ const Features: FC = () => {
       backgroundColor: 'rgba(225, 218, 232)',
       paddingTop: '2vh',
       paddingBottom: '2vh',
-      width: '75%',
+      width: '80%',
     },
     icon: {
       //color:
