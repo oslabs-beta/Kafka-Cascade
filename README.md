@@ -57,7 +57,7 @@ npm install kafka-cascade
 
 ### <a name="usage"></a> Usage
 
-KafkaJS objects should be wrapped in the Kafka Cascade CascadeService. The user will provide the topic, groupId, and the callbacks to be invoked upon successfully delivery a message or when a message ends up in the DLQ. For more details, please see the [documentation](https://kafka-cascade.io/docs).
+KafkaJS objects should be wrapped in the Kafka Cascade CascadeService. The user will provide the topic, groupId, and the callbacks to be invoked upon successfully delivery a message or when a message ends up in the DLQ. For more details, please see the [documentation](https://kafka-cascade.io/doc).
 
 ```javascript
 var service: Cascade.CascadeService;
