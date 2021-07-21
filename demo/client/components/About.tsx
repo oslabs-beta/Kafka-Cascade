@@ -49,7 +49,7 @@ const About: FC = () => {
       name: 'Seung Joon Lee',
       github: 'https://github.com/GnuesJ',
       linkedin: '',
-      photo: 'Cartoon_Josh.jpeg',
+      photo: 'SeungJoonLee.jpg',
     },
     {
       name: 'Michael Weber',
