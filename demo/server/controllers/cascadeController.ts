@@ -10,7 +10,7 @@ if(process.env.DEMO === 'true') {
 }
 else kafka = new Kafka({
   clientId: 'kafka-demo',
-  brokers: [process.env.KAFKA_ADDRESS + ':29092'],
+  brokers: [process.env.KAFKA_BROKER_1, process.env.KAFKA_BROKER_2],
 });
 
 const users: { [index: string]: { 
