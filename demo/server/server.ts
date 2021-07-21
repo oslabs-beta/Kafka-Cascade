@@ -59,5 +59,17 @@ var server = https.createServer({
   key: fs.readFileSync(process.env.SERVER_KEY),
   cert: fs.readFileSync(process.env.SERVER_CERT),
 }, app).listen(PORT, () => {
-  console.log('Listening to PORT ', PORT);
+  console.log(`Listening to PORT ${PORT}...`);
+});
+
+
+const httpApp = express();
+const HTTP_PORT = process.env.HTTP_PORT;
+httpApp.get('/', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.status(301).send(Buffer.from('<html><head></head><body><script>window.location.replace("https://' + process.env.DOMAIN + ':' + PORT + '");</script></body><html>'));
+});
+
+httpApp.listen(HTTP_PORT, () => {
+  console.log(`http redirect listening on port ${HTTP_PORT}...`);
 });
