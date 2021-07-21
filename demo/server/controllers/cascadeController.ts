@@ -91,15 +91,13 @@ const stopService = async (key:string) => {
 }
 
 const pauseService = async(key:string) => {
-  if(!users[key].service.paused){
-    // await producer.pause();
+  if(!users[key].service.paused()){
     await users[key].service.pause();
   }
 }
 
 const resumeService = async(key:string) => {
-  if(users[key].service.paused){
-    // await producer.resume();
+  if(users[key].service.paused()){
     await users[key].service.resume();
   }
 }
@@ -234,14 +232,14 @@ socket.use('stop', (req, res) => {
 
 socket.use('pause', (req, res) => {
   console.log(`Received pause request from ${res.conn.key}`);
-  if(service) {
+  if(users[res.conn.key].service) {
     pauseService(res.conn.key);
   }
 })
 
 socket.use('resume', (req, res) => {
   console.log(`Received resume request from ${res.conn.key}`);
-  if(service){
+  if(users[res.conn.key].service){
     resumeService(res.conn.key);
   }
 })
