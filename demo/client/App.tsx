@@ -67,7 +67,17 @@ export const App: FC<AppProps> = () => {
 
   if(state.loading === 'loading') {
     return (
-      <h1>Loading...</h1>
+      <div className='container'>
+        <div className='loader'>
+          <img className='loader--dot' src='https://i.imgur.com/7BCVAzk.png'/>
+          <img className='loader--dot' src='https://i.imgur.com/7BCVAzk.png'/>
+          <img className='loader--dot' src='https://i.imgur.com/7BCVAzk.png'/>
+          <img className='loader--dot' src='https://i.imgur.com/7BCVAzk.png'/>
+          <img className='loader--dot' src='https://i.imgur.com/7BCVAzk.png'/>
+          <img className='loader--dot' src='https://i.imgur.com/7BCVAzk.png'/>
+          <div className='loader--text'></div>
+        </div>
+      </div>
     );
   }
   else if(state.loading === 'error') {
