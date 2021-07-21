@@ -1,4 +1,4 @@
-const wsURL = 'ws://' + process.env.WEBSOCKET_ADDRESS + ':' + process.env.WEBSOCKET_PORT + '/';
+const wsURL = 'wss://' + process.env.WEBSOCKET_ADDRESS + ':' + process.env.WEBSOCKET_PORT + '/';
 
 class Socket {
   socket:WebSocket;

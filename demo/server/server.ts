@@ -3,6 +3,8 @@ const express = require('express');
 import cascadeController from './controllers/cascadeController';
 const path = require ('path');
 const favicon = require('serve-favicon');
+const https = require('https');
+const fs = require('fs');
 
 const PORT = process.env.APP_PORT;
 const app = express();
@@ -53,6 +55,9 @@ app.use((err, req, res, next) => {
 });
 
 // start server
-const server = app.listen(PORT, () => {
+var server = https.createServer({
+  key: fs.readFileSync(process.env.SERVER_KEY),
+  cert: fs.readFileSync(process.env.SERVER_CERT),
+}, app).listen(PORT, () => {
   console.log('Listening to PORT ', PORT);
 });
