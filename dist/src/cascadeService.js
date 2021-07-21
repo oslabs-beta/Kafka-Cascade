@@ -215,7 +215,6 @@ class CascadeService extends EventEmitter {
                     try {
                         yield this.consumer.pause();
                         this.producer.pause();
-                        console.log('cascade.pause() called ', this.producer.paused);
                         resolve(true);
                         this.emit('pause');
                     }

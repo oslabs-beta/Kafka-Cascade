@@ -1,11 +1,19 @@
 const ws = require("nodejs-websocket");
+const fs = require('fs');
 
-const PORT = process.env.WEBSOCKET_PORT;
+const PORT = Number(process.env.WEBSOCKET_PORT);
 const routes = [];
+
+const options = {
+  key: fs.readFileSync(process.env.SERVER_KEY),
+  cert: fs.readFileSync(process.env.SERVER_CERT),
+
+  secure:true,
+};
 
 const socket = {
   server: ws
-    .createServer((conn) => {
+    .createServer(options, (conn) => {
       conn.on("text", (str) => {
         const msg = JSON.parse(str);
 
