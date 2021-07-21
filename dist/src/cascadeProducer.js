@@ -34,7 +34,6 @@ class CascadeProducer extends EventEmitter {
     }
     pause() {
         this.paused = true;
-        console.log(this.paused);
     }
     resume() {
         this.paused = false;
