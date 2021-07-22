@@ -1,6 +1,6 @@
 {
   "name": "kafka-cascade",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Message Reprocessing for KafkaJS",
   "main": "./dist/index.js",
   "scripts": {

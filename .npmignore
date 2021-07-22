@@ -7,3 +7,5 @@ Dockerfile
 docs
 jsdoc.json
 __tests__
+.dockerignore
+.env
