@@ -6,3 +6,4 @@ Dockerfile
 *.zip
 docs
 jsdoc.json
+__tests__
