@@ -13,6 +13,7 @@ else kafka = new Kafka({
   clientId: 'kafka-demo',
   brokers,
 });
+console.log('Brokers:', brokers);
 
 const users: { [index: string]: { 
   retryLevels:number, 
