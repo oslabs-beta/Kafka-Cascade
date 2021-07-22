@@ -1,7 +1,7 @@
 {
   "name": "kafka-cascade",
   "version": "1.0.0",
-  "description": "DLQ handling for KafkaJS",
+  "description": "Message Reprocessing for KafkaJS",
   "main": "./dist/index.js",
   "scripts": {
     "start": "cd demo; npm start",
@@ -13,10 +13,11 @@
   },
   "keywords": [
     "Kafka",
+    "KafkaJS",
     "Message Reprocessing",
     "Dead Letter Queue"
   ],
-  "author": "Davette Byran, Michael Weber, Robert Du, Seung Lee",
+  "author": "Davette Byran, Michael Weber, Robert Du, Seung Joon Lee",
   "license": "MIT",
   "homepage": "https://kafka-cascade.io",
   "repository": {

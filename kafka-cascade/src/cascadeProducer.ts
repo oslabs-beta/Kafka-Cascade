@@ -13,7 +13,6 @@ class CascadeProducer extends EventEmitter {
   sendStorage = {};
   routes: Types.ProducerRoute[];
 
-  // pass in kafka interface
   constructor(kafka: Types.KafkaInterface, topic:string, dlqCB: Types.RouteCallback) {
     super();
     this.topic = topic;
@@ -43,7 +42,7 @@ class CascadeProducer extends EventEmitter {
     this.paused = false;
     // declare array to store promises
     const resumePromises = [];
-    while(this.pausedQueue.length) {
+    while (this.pausedQueue.length) {
       // push promise into promise array
       const {msg, status} = this.pausedQueue.shift();
       resumePromises.push(this.send(msg, status));
@@ -82,6 +81,7 @@ class CascadeProducer extends EventEmitter {
 
   send(msg: Types.KafkaConsumerMessageInterface, status:string): Promise<any> {
     try{
+
       if(this.paused) {
         this.pausedQueue.push({msg, status});
         return new Promise(resolve => resolve(true));
@@ -130,11 +130,11 @@ class CascadeProducer extends EventEmitter {
     }
   }
   
-  //Used by send
-  //sets delay for producer messages
+  // Used by send
+  // Sets timedelay for producer messages
   sendTimeout(id:string, msg: Types.KafkaProducerMessageInterface, retries:number, route: Types.ProducerRoute) {
     return new Promise((resolve, reject) => {
-      //stores each send and msg to sendStorage[id] 
+      // Stores each send and msg to sendStorage[id] 
       this.sendStorage[id] = {
         sending: () => {
           this.emit('retry', msg);
@@ -157,8 +157,8 @@ class CascadeProducer extends EventEmitter {
     });
   };
 
-  //Used by send
-  //sets batch processing
+  // Used by send
+  // sets batch limit before processing
   sendBatch(msg:Types.KafkaProducerMessageInterface, retries:number, route:Types.ProducerRoute){
     return new Promise((resolve, reject) => {
       route.levels[retries].messages.push(msg.messages[0]);
@@ -176,7 +176,7 @@ class CascadeProducer extends EventEmitter {
     });
   }
 
-  //User is ability to set the timeout and batchLimit
+  //set number of retries, timeoutLimit and batchLimit parameters
   setDefaultRoute(count:number, options?: {timeoutLimit?: number[], batchLimit?: number[]}):Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
@@ -210,7 +210,7 @@ class CascadeProducer extends EventEmitter {
         });
         
 
-        // get an admin client to pre-register topics
+        // sets admin client to pre-register topics
         await this.admin.connect();
         const registerTopics = {
           waitForLeaders: true,

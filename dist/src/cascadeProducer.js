@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const EventEmitter = require('events');
 const queue_1 = require("./util/queue");
 class CascadeProducer extends EventEmitter {
-    // pass in kafka interface
     constructor(kafka, topic, dlqCB) {
         super();
         this.sendStorage = {};
@@ -119,11 +118,11 @@ class CascadeProducer extends EventEmitter {
             this.emit('error', error);
         }
     }
-    //Used by send
-    //sets delay for producer messages
+    // Used by send
+    // Sets timedelay for producer messages
     sendTimeout(id, msg, retries, route) {
         return new Promise((resolve, reject) => {
-            //stores each send and msg to sendStorage[id] 
+            // Stores each send and msg to sendStorage[id] 
             this.sendStorage[id] = {
                 sending: () => {
                     this.emit('retry', msg);
@@ -149,8 +148,8 @@ class CascadeProducer extends EventEmitter {
         });
     }
     ;
-    //Used by send
-    //sets batch processing
+    // Used by send
+    // sets batch limit before processing
     sendBatch(msg, retries, route) {
         return new Promise((resolve, reject) => {
             route.levels[retries].messages.push(msg.messages[0]);
@@ -168,7 +167,7 @@ class CascadeProducer extends EventEmitter {
                 resolve(true);
         });
     }
-    //User is ability to set the timeout and batchLimit
+    //set number of retries, timeoutLimit and batchLimit parameters
     setDefaultRoute(count, options) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
@@ -202,7 +201,7 @@ class CascadeProducer extends EventEmitter {
                     };
                     defaultRoute.levels.push(emptyMsg);
                 });
-                // get an admin client to pre-register topics
+                // sets admin client to pre-register topics
                 yield this.admin.connect();
                 const registerTopics = {
                     waitForLeaders: true,

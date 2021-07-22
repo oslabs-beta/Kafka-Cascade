@@ -14,7 +14,6 @@ class TestKafka {
 
   constructor() {
     this.subscribers = [];
-    //used for testFn to test param types, number of times function was called
     this.consumer = testFn(() => new TestConsumer(this));
     this.producer = testFn(() => new TestProducer(this));
     this.admin = testFn(() => new TestAdmin());
@@ -67,8 +66,7 @@ class TestProducer {
   disconnect: any;
   send: any;
   partition = 0;
-  offsets: {[details: string] : {count?:number}}; //number of times message was sent
-    //details and count used to create an hashtable
+  offsets: {[details: string] : {count?:number}};
 
   constructor(kafka: TestKafka) {
     this.connect = testFn(() => {
@@ -79,11 +77,9 @@ class TestProducer {
     });
     this.offsets = {};
 
-    //defines the send function
     this.send = testFn((msg: Types.KafkaProducerMessageInterface) => {
       try {
         msg.messages.forEach(m => {
-          //check if sent for the given topic
           if(!this.offsets[msg.topic]) this.offsets[msg.topic] = {count:0};
           
           for(let i = 0; i < kafka.subscribers.length; i++) {

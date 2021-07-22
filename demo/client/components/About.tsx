@@ -60,7 +60,8 @@ const About: FC = () => {
   ];
 
   const contributorArray = [];
-
+  
+  // create array of contributor jsx code for each contributor object
   contributors.forEach((contributor) => {
     contributorArray.push(
       <Card className={classes.root}>
