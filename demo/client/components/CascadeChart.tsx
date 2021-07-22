@@ -10,12 +10,7 @@ interface ChartProps {
   
 }
 
-// interface ChartState {
-
-// }
-
 export const CascadeChart: FC<ChartProps> = (props: ChartProps) => {
-  // const [state, setState] = useState(0);
   
   useEffect(() => {
     const colorRangeInfo = {

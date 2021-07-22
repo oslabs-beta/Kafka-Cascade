@@ -34,7 +34,6 @@ const Features: FC = () => {
       width: '80%',
     },
     icon: {
-      //color:
       fontSize: '2vh',
       padding: '2vh',
     }

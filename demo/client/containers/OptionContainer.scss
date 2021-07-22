@@ -19,7 +19,7 @@
 
 .radioGroup {
   display:flex;
-  align-items:center;
+  justify-content: center;
 }
 
 .spacer {
@@ -34,6 +34,10 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+.retryOptionLeftBox {
+  padding-right: 40px;
 }
 
 .numberOfRetriesContainer {

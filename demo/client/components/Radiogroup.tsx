@@ -19,10 +19,6 @@ interface RadioButtonGroupState {
   },
 }
 
-// import socket from '../socket';
-
-// socket.sendEvent('start', {})
-
 export const RadioButtonGroup: FC<any> = (props:any) => {
   const [retryType, setRetryType] = React.useState<object>({
     fastRetry: true,
