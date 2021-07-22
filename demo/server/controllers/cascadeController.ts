@@ -184,7 +184,8 @@ socket.use('close', async (req, res) => {
 });
 
 socket.use('set_rate', (req, res) => {
-  users[res.conn.key].messageRate = req.rate;
+  if(users[res.conn.key])
+    users[res.conn.key].messageRate = req.rate;
 });
 
 export const heartbeat = () => {
