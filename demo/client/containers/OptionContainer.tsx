@@ -99,6 +99,8 @@ export const OptionContainer: FC<any> = (props:any) => {
   //set the number of messages sent
   const setMessagesPerSecondHandler = (event: any, rate: number) => {
     setMessagesPerSecond(rate);
+    if(typeof(rate) !== 'string' || typeof(rate) !== 'number') rate = 1;
+    else rate = Number(rate);
     socket.sendEvent('set_rate', {rate});
   }
 

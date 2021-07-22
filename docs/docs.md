@@ -65,3 +65,29 @@ await service.setRoute('timeout', 0);
 await service.connect();
 await service.run();
 ```
+## Events
+The following events can be registered onto the CascadeService object
+### connect()
+Emitted when the service succesfully connects to Kafka
+### disconnect()
+Emitted when the service succesfully connects to Kafka
+### run()
+Emitted when the service succesfully executes consumer.run
+### stop()
+Emitted when the service succesfully stops
+### pause()
+Emitted when the service is paused
+### resume()
+Emitted when the service is resumed
+### receive(msg)
+Emitted when the service receives a Kafka message on the base topic
+### success(msg)
+Emitted when the service callback resolves a message
+### retry(msg)
+Emitted when a rejected message is retried
+### dlq(msg)
+Emitted when a reject message is sent to the DLQ
+### error(error)
+Emitted on error within the library
+### serviceError(error)
+Emitted when a uncaught error occurs within the service callback

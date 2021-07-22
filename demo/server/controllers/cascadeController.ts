@@ -5,13 +5,15 @@ import socket from '../websocket';
 import { TestKafka } from '../../../__tests__/cascade.mockclient.test'
 
 var kafka: Cascade.Types.KafkaInterface;
+const brokers = process.env.KAFKA_BROKER_2 !== 'false' ? [process.env.KAFKA_BROKER_1, process.env.KAFKA_BROKER_2] : [process.env.KAFKA_BROKER_1];
 if(process.env.DEMO === 'true') {
   kafka = new TestKafka();
 }
 else kafka = new Kafka({
   clientId: 'kafka-demo',
-  brokers: [process.env.KAFKA_ADDRESS + ':29092'],
+  brokers,
 });
+console.log('Brokers:', brokers);
 
 const users: { [index: string]: { 
   retryLevels:number, 
