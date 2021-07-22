@@ -47,11 +47,13 @@ const NavBar: FC = () => {
   const classes = useStyles();
   const iconClass = iconStyle();
 
+  // initial values for condensed navbar view and button drawer
   const [state, setState] = useState({
     mobileView: false,
     drawerOpen: false,
   });
 
+  // destructure mobileView and drawOpen
   const { mobileView, drawerOpen } = state;
 
   useEffect(() => {
@@ -69,6 +71,7 @@ const NavBar: FC = () => {
     }
   }, []);
 
+  // navbar display elements if the window is >600 pixels
   const displayDesktop = () => {
     return (
       <Toolbar className={classes.landingButtons}>
@@ -147,6 +150,7 @@ const NavBar: FC = () => {
     );
   };
 
+  // navbar display elements if the window is <600 pixels
   const displayMobile = () => {
     const handleDrawerOpen = () =>
       setState((prevState) => ({ ...prevState, drawerOpen: true }));

@@ -1,5 +1,4 @@
 import React, { FC } from 'react';
-import Box from '@material-ui/core/Box';
 import {
   createStyles, makeStyles, Container,
 } from '@material-ui/core';

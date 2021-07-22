@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import Slider from '@material-ui/core/Slider';
 import Typography from '@material-ui/core/Typography';
 
@@ -6,13 +6,9 @@ function valuetext(value: number) {
   return `${value}`;
 }
 
+// updates the number of messages per second
 export const MessageSlider: FC<any> = (props:any) => {
   const {messagesPerSecond, setMessagesPerSecondHandler} = props;
-  //updates the number of messages per send
-  // const numMessagesHandler = (event) => {
-  //   console.log(event.target.value);
-  //   setMessagesPerSecond(event.target.value);
-  // }
 
   return(
     <div>
@@ -20,7 +16,6 @@ export const MessageSlider: FC<any> = (props:any) => {
         Messages per Second
       </Typography>
       <Slider 
-        // defaultValue={1}
         value={messagesPerSecond}
         getAriaValueText={valuetext}
         aria-labelledby="discrete-slider"

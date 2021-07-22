@@ -2,8 +2,7 @@ const cascade = require('../kafka-cascade/index');
 import * as Types from '../kafka-cascade/src/kafkaInterface';
 import { TestKafka } from './cascade.mockclient.test';
 
-// const log = console.log;
-// console.log = (test, ...args) => test === 'test' && log(args); 
+
 console.log = jest.fn();
 process.env.test = 'test';
 
@@ -29,7 +28,7 @@ describe('Basic service tests', () => {
         console.log('Caught error in service CB: ' + error);
       }
     }
-    //used to ask how dlq was used
+
     const dlq = jest.fn();
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
@@ -40,7 +39,7 @@ describe('Basic service tests', () => {
 
     const producer = kafka.producer();
     const messageCount = 10;
-    //mimics sending message for the producer
+
     for(let i = 0; i < messageCount; i++) {
       await producer.send({
         topic: 'test-topic',
@@ -50,24 +49,19 @@ describe('Basic service tests', () => {
       });
     }
 
-    //checks the number of times the message was sent
     expect(producer.offsets['test-topic'].count).toBe(messageCount);
     const testServiceOffsets = testService.producer.producer.offsets;
-    // since every request should have failed, offsets should equal retryLevels
     expect(Object.keys(testServiceOffsets)).toHaveLength(retryLevels);
-    // each level should have sent a number of messages equal to messageCount
     for(let topic in testServiceOffsets) {
       expect(testServiceOffsets[topic].count).toBe(messageCount);
     }
-    expect(dlq).toHaveBeenCalledTimes(messageCount);//dlq should be the same as the messagecount
+    expect(dlq).toHaveBeenCalledTimes(messageCount);
   });
 
   it('All messages succeed when retries is 1', async () => {
     const serviceAction = (msg: Types.KafkaConsumerMessageInterface, resolve: any, reject: any) => {
-      //set it to succeed after 1 retry
       const { retries, status } = JSON.parse(msg.message.headers.cascadeMetadata);
       if(retries === 1) {
-        // status = 'success';
         resolve(msg);
       }
       else reject(msg);

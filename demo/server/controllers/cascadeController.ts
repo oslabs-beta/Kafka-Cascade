@@ -26,7 +26,7 @@ const users: { [index: string]: {
 const serviceCB:Cascade.Types.ServiceCallback = (msg, resolve, reject) => {
   const message = JSON.parse(msg.message.value);
   const metadata = cascade.getMetadata(msg);
-  if(!users[message.key] || metadata.retries > users[message.key].retryLevels) return; //This is necessary, I don't know why
+  if(!users[message.key] || metadata.retries > users[message.key].retryLevels) return;
 
   if(Math.random() < message.success) resolve(msg);
   else reject(msg);
@@ -101,96 +101,6 @@ const resumeService = async(key:string) => {
     await users[key].service.resume();
   }
 }
-
-// start express controller
-const cascadeController:any = {};
-
-cascadeController.startService = async (req: {query: {retries:string}}, res, next) => {
-  try {
-    startService('postman', 5);
-
-    // what do we send back?
-    res.locals.confirmation = 'Cascade service is connecting to Kafka server...';
-    return next();
-  }
-  catch(error) {
-    return next({
-      log: 'Error in cascadeController.startService: ' + error,
-      message: 'Error in cascadeController.startService, check the log',
-    });
-  }
-};
-
-cascadeController.sendMessage = async (req, res, next) => {
-  try {
-    let retries = req.query.retries;
-    //TODO: add delayTime on to the argument
-    res.locals = { retries: Number(retries), time: (new Date()).valueOf() };
-
-    // check to see if server is running
-
-    // send message
-    await users['postman'].producer.send({
-      topic: users['postman'].topic,
-      messages: [
-        {
-          value: JSON.stringify(res.locals),
-        }
-      ]
-    });
-    
-    return next();
-  }
-  catch(error) {
-    return next({
-      log: 'Error in cascadeController.sendMessage: ' + error,
-      message: 'Error in cascadeController.sendMessage, check the log',
-    });
-  }
-};
-
-cascadeController.stopService = async (req, res, next) => {
-  try {
-    stopService('postman');
-    return next();
-  }
-  catch(error) {
-    return next({
-      log: 'Error in cascadeController.stopService: ' + error,
-      message: 'Error in cascadeController.stopService, check the log',
-    });
-  }
-};
-
-cascadeController.pauseService = async (req, res, next) => {
-  try{
-    await pauseService('postman');
-    return next();
-  } catch(error) {
-    return next({
-      log: 'Error in cascadeController.pauseService: ' + error,
-      message: 'Error in cascadeController.pauseService, check the log',
-    });
-  }
-}
-
-cascadeController.resumeService = async (req, res, next) => {
-  try{
-    resumeService('postman');
-    return next();
-  } catch(error) {
-    return next({
-      log: 'Error in cascadeController.resumeService: ' + error,
-      message: 'Error in cascadeController.resumeService, check the log',
-    });
-  }
-}
-
-
-
-// end express controller
-export default cascadeController;
-
 
 // start websocket functionality
 const sendMessageContinuous = async (key:string ) => {
@@ -270,7 +180,7 @@ socket.use('set_rate', (req, res) => {
   users[res.conn.key].messageRate = req.rate;
 });
 
-const heartbeat = () => {
+export const heartbeat = () => {
   for(let conn in socket.server.connections) {
     const c = socket.server.connections[conn];
     let levelCounts:number[] = [];
@@ -291,4 +201,3 @@ const heartbeat = () => {
 
   setTimeout(heartbeat, 100);
 };
-heartbeat();

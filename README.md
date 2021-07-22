@@ -35,7 +35,7 @@ Kafka Cascade is a lightweight npm library for [KafkaJS](https://kafka.js.org/),
 
 Kafka Cascade wraps around KafkaJS objects to provide a user-configurable service for reprocessing messages, allowing developers to decide how to handle retries and when messages should be sent to the dead letter queue (DLQ).
 
-<small>KAFKA is a registered trademark of The Apache Software Foundation. Kafka Cascade has no affiliation with and is not endorsed by The Apache Software Foundation. Kafka Cascade was developed separately from KafkaJS and is not affiliated with KafkaJS</small>
+<small><small>KAFKA is a registered trademark of The Apache Software Foundation. Kafka Cascade has no affiliation with and is not endorsed by The Apache Software Foundation. Kafka Cascade was developed separately from KafkaJS and is not affiliated with KafkaJS</small></small>
 
 
 ### <a name="features"></a> Features

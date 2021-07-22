@@ -6,8 +6,6 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import socket from '../socket';
 import { RetryLevelTextField } from '../components/RetryLevelTextField';
-
-
 import './OptionContainer.scss';
 import { colors } from '@material-ui/core';
 
@@ -33,7 +31,7 @@ export const OptionContainer: FC<any> = (props:any) => {
   const [isStarted, setIsStarted] = useState<boolean>(false);
   //used to pause and resume demo
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  //defaultParams
+  //defaultParams, used by resetHandler
   const [defaultParams, isDefaultParams] = useState<any>({numberOfRetries, retryType, timeoutLimitArray, batchLimitArray})
 
 
@@ -57,9 +55,6 @@ export const OptionContainer: FC<any> = (props:any) => {
       setRetryOptionToggle(false);
       let options: any;
       if(retryType.fastRetry) options = {};
-      //TODO: CHANGE DATA PASSED TO THE CREATED ARRAYS
-      // else if(retryType.timeout) options = {timeoutLimit: [1000, 2000, 4000, 8000, 16000, 32000]};
-      // else options = {batchLimit: [6,6,6,6,6,6]}
       else if(retryType.timeout) options = {timeoutLimit: timeoutLimitArray.map(t => Number(t))};
       else options = {batchLimit: batchLimitArray.map(b => Number(b))};
       socket.sendEvent('start', {retries: Number(numberOfRetries), options});
@@ -69,7 +64,6 @@ export const OptionContainer: FC<any> = (props:any) => {
 
   //pause
   const pauseHandler = () => {
-    //write functionality here
     if(!isPaused){
       socket.sendEvent('pause', {});
       setIsPaused(true);
@@ -77,22 +71,11 @@ export const OptionContainer: FC<any> = (props:any) => {
   }
   //resume
   const resumeHandler = () => {
-    //write functionality here
+
     if(isPaused){
       socket.sendEvent('resume', {});
       setIsPaused(false);
     }
-  }
-
-  //reset
-  const resetHandler = () => {
-    if(isStarted) return;
-    //write functionality here
-    setNumberOfRetries(defaultParams.numberOfRetries);
-    setRetryType(defaultParams.retryType);
-    setTimeoutLimitArray(defaultParams.timeoutLimitArray);
-    setBatchLimitArray(defaultParams.batchLimitArray)
-    setRetryOptionToggle(false);
   }
 
   //stops the current session
@@ -101,6 +84,16 @@ export const OptionContainer: FC<any> = (props:any) => {
       socket.sendEvent('stop', {});
       setIsStarted(false);
     }
+  }
+
+  //reset
+  const resetHandler = () => {
+    if(isStarted) return;
+    setNumberOfRetries(defaultParams.numberOfRetries);
+    setRetryType(defaultParams.retryType);
+    setTimeoutLimitArray(defaultParams.timeoutLimitArray);
+    setBatchLimitArray(defaultParams.batchLimitArray)
+    setRetryOptionToggle(false);
   }
 
   //set the number of messages sent
@@ -192,7 +185,7 @@ export const OptionContainer: FC<any> = (props:any) => {
   if(retryOptionToggle){
     retryOptionContainer = (
       <div className="retryOptionContainer">
-        <div>
+        <div className="retryOptionLeftBox">
           <Box className='numberOfRetriesContainer' m={2}>
             <TextField
               className='textField'
@@ -207,7 +200,7 @@ export const OptionContainer: FC<any> = (props:any) => {
               defaultValue = {numberOfRetries}
               inputProps={{ min: 0, max: retryLevelLIMIT}}
               onChange={updateNumberOfRetriesHandler}
-              // onKeyPress = {(event) => {if(event.target.value > retryLevelLIMIT) event.target.blur()}}
+              onWheel={(event:any) => {event.target.blur()}}
             />
           </Box>
           <RadioButtonGroup retryType={retryType} setRetryType={setRetryType} handleChange={handleChange}/>
@@ -249,7 +242,6 @@ export const OptionContainer: FC<any> = (props:any) => {
             >Options
           </Button>
         </Box>
-        {/* <div className='spacer'></div> */}
       </div>
       {retryOptionContainer}
       <div className='messageSliderContainer'>

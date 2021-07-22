@@ -23,7 +23,7 @@ describe('Cascade Metadata', () => {
       const metadata = cascade.getMetadata(msg);
       resolve(msg);
     }
-    //used to ask how dlq was used
+
     const dlq = jest.fn();
 
     testService = await cascade.service(kafka, 'test-topic', 'test-group', serviceAction, jest.fn(), dlq);
