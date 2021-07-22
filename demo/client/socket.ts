@@ -25,7 +25,7 @@ class Socket {
       });
     }
 
-    this.listeners = {};
+    this.listeners = {any:[]};
     this.nextId = 0;
     this.connected = false;
   }
