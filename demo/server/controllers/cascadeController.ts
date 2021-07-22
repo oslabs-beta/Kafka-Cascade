@@ -149,14 +149,14 @@ socket.use('stop', (req, res) => {
 
 socket.use('pause', (req, res) => {
   console.log(`Received pause request from ${res.conn.key}`);
-  if(users[res.conn.key].service) {
+  if(users[res.conn.key]) {
     pauseService(res.conn.key);
   }
 })
 
 socket.use('resume', (req, res) => {
   console.log(`Received resume request from ${res.conn.key}`);
-  if(users[res.conn.key].service){
+  if(users[res.conn.key]){
     resumeService(res.conn.key);
   }
 })
