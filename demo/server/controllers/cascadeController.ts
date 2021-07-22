@@ -56,7 +56,7 @@ const startService = (key:string, retryLevels:number, options?: {timeoutLimit?:n
       const user = { 
         retryLevels, 
         levelCounts: (new Array(retryLevels+2)).fill(0), 
-        topic: 'test-topic-' + key,
+        topic: 'test-topic-' + Array.from(key).filter(c => isAlphaNum(c)).join(''),
         producer: kafka.producer(),
         service: null,
         messageRate: 1,
@@ -79,6 +79,11 @@ const startService = (key:string, retryLevels:number, options?: {timeoutLimit?:n
       reject(error);
     }
   });
+}
+
+const isAlphaNum = (c:string) => {
+  let code = c.charCodeAt(0);
+  return (code >= 'a'.charCodeAt(0) && code <= 'z'.charCodeAt(0)) ||  (code >= 'A'.charCodeAt(0) && code <= 'Z'.charCodeAt(0)) || (code >= '0'.charCodeAt(0) && code <= '9'.charCodeAt(0));
 }
 
 const stopService = async (key:string) => {
