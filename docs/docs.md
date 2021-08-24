@@ -30,7 +30,7 @@ kafka-cascade supports setting routes on the message retries for different statu
 
 ## Example
 ```
-const cascade = require('kafka');
+const cascade = require('kafka-cascade');
 
 // create the service callback to simulate some time consumming task
 const serviceCB = (msg, resolve, reject) => {

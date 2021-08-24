@@ -149,7 +149,7 @@ Levels: specifies how many times a message should be retried before calling the 
 <h3>Routes</h3>
 <p>kafka-cascade supports setting routes on the message retries for different status codes. By calling <code>.setRoute</code> on the service, kafka-cascade can utilize that route by suppling the status code when calling <code>reject</code> from the service callback</p>
 <h2>Example</h2>
-<pre class="prettyprint source"><code>const cascade = require('kafka');
+<pre class="prettyprint source"><code>const cascade = require('kafka-cascade');
 
 // create the service callback to simulate some time consumming task
 const serviceCB = (msg, resolve, reject) => {
