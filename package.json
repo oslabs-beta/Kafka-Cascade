@@ -1,6 +1,6 @@
 {
   "name": "kafka-cascade",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Message Reprocessing for KafkaJS",
   "main": "./dist/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   ],
   "author": "Davette Byran, Michael Weber, Robert Du, Seung Joon Lee",
   "license": "MIT",
-  "homepage": "https://kafka-cascade.io",
+  "homepage": "https://www.npmjs.com/package/kafka-cascade",
   "repository": {
     "type": "git",
     "url": "https://github.com/oslabs-beta/Kafka-Cascade"
